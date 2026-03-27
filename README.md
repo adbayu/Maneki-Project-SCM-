@@ -37,15 +37,12 @@ Output: Menu yang sudah "Final" akan muncul secara otomatis sebagai opsi di modu
 🛠 Instalasi
 Clone repositori:
 
-Bash
 git clone https://github.com/username/scm-mbg-nutrition-module.git
 Setup Backend:
 
-Bash
 cd backend && npm install
 Setup Frontend:
 
-Bash
 cd frontend && npm install
 Konfigurasi Environment:
 Buat file .env dan masukkan kredensial database SQL serta API Key untuk AI Service.
