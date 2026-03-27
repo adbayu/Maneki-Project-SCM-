@@ -24,3 +24,28 @@ Database: SQL (Structured Query Language)
 AI Integration: LLM (Large Language Model) API via Service Layer
 
 Architecture: Microservices Pattern
+
+🚀 Alur Integrasi (System Flow)
+Input: Manajer Produksi memasukkan detail menu dan daftar bahan baku.
+
+Process: Backend mengirimkan data ke AI Service untuk dianalisis profil gizinya.
+
+Insight: AI memberikan feedback rekomendasi perbaikan komposisi jika diperlukan.
+
+Output: Menu yang sudah "Final" akan muncul secara otomatis sebagai opsi di modul Manajemen Produksi untuk jadwal masak harian.
+
+🛠 Instalasi
+Clone repositori:
+
+Bash
+git clone https://github.com/username/scm-mbg-nutrition-module.git
+Setup Backend:
+
+Bash
+cd backend && npm install
+Setup Frontend:
+
+Bash
+cd frontend && npm install
+Konfigurasi Environment:
+Buat file .env dan masukkan kredensial database SQL serta API Key untuk AI Service.
