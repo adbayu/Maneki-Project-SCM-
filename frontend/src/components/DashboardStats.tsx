@@ -1,138 +1,329 @@
-import { useState, useEffect } from 'react';
-import { BarChart3, UtensilsCrossed, Zap, TrendingUp } from 'lucide-react';
-import type { MenuStats } from '../types';
+import { useEffect, useMemo, useState } from "react";
+import {
+  Activity,
+  AlertCircle,
+  Brain,
+  Gauge,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  UtensilsCrossed,
+  Zap,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { MenuStats } from "../types";
 
-const API = 'http://localhost:3002/api/menu';
+const API = "http://localhost:3002/api/menu";
 
 interface DashboardStatsProps {
   onNavigateToList: () => void;
 }
 
-export default function DashboardStats({ onNavigateToList }: DashboardStatsProps) {
+const AI_ENGINE = {
+  name: "Google Gemini 1.5 Flash",
+  model: "gemini-1.5-flash",
+  provider: "Google AI",
+  fallback: "Rule-Based (AKG Kemenkes RI)",
+};
+
+interface WidgetItem {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: LucideIcon;
+  tone: "emerald" | "blue" | "amber" | "rose" | "violet" | "cyan";
+}
+
+const toneStyles: Record<
+  WidgetItem["tone"],
+  { bg: string; icon: string; chip: string; watermark: string }
+> = {
+  emerald: {
+    bg: "bg-emerald-50 border-emerald-200",
+    icon: "text-emerald-600",
+    chip: "bg-emerald-600",
+    watermark: "text-emerald-200",
+  },
+  blue: {
+    bg: "bg-blue-50 border-blue-200",
+    icon: "text-blue-600",
+    chip: "bg-blue-600",
+    watermark: "text-blue-200",
+  },
+  amber: {
+    bg: "bg-amber-50 border-amber-200",
+    icon: "text-amber-600",
+    chip: "bg-amber-600",
+    watermark: "text-amber-200",
+  },
+  rose: {
+    bg: "bg-rose-50 border-rose-200",
+    icon: "text-rose-600",
+    chip: "bg-rose-600",
+    watermark: "text-rose-200",
+  },
+  violet: {
+    bg: "bg-violet-50 border-violet-200",
+    icon: "text-violet-600",
+    chip: "bg-violet-600",
+    watermark: "text-violet-200",
+  },
+  cyan: {
+    bg: "bg-cyan-50 border-cyan-200",
+    icon: "text-cyan-600",
+    chip: "bg-cyan-600",
+    watermark: "text-cyan-200",
+  },
+};
+
+function getHealthScore(stats: MenuStats): number {
+  const kalori = Number(stats.avg_nutrition?.avg_kalori || 0);
+  const protein = Number(stats.avg_nutrition?.avg_protein || 0);
+  const lemak = Number(stats.avg_nutrition?.avg_lemak || 0);
+  const karbo = Number(stats.avg_nutrition?.avg_karbohidrat || 0);
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+  const kaloriScore = clamp((kalori / 550) * 100);
+  const proteinScore = clamp((protein / 25) * 100);
+  const lemakScore = clamp((lemak / 18) * 100);
+  const karboScore = clamp((karbo / 75) * 100);
+
+  return Math.round((kaloriScore + proteinScore + lemakScore + karboScore) / 4);
+}
+
+export default function DashboardStats({
+  onNavigateToList,
+}: DashboardStatsProps) {
   const [stats, setStats] = useState<MenuStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${API}/stats/summary`)
-      .then(res => res.json())
-      .then(data => setStats(data))
-      .catch(err => console.error(err))
+      .then((res) => res.json())
+      .then((data) => setStats(data))
+      .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, []);
 
+  const widgets = useMemo<WidgetItem[]>(() => {
+    if (!stats) return [];
+
+    const totalMenus = Number(stats.total_menus || 0);
+    const activeMenus = Number(stats.active_menus || 0);
+    const activeRatio =
+      totalMenus > 0 ? Math.round((activeMenus / totalMenus) * 100) : 0;
+    const healthScore = getHealthScore(stats);
+
+    return [
+      {
+        title: "Total Menu",
+        value: String(totalMenus),
+        subtitle: "Seluruh menu yang tercatat",
+        icon: UtensilsCrossed,
+        tone: "emerald",
+      },
+      {
+        title: "Menu Aktif",
+        value: String(activeMenus),
+        subtitle: "Menu siap produksi hari ini",
+        icon: Activity,
+        tone: "blue",
+      },
+      {
+        title: "Rasio Menu Aktif",
+        value: `${activeRatio}%`,
+        subtitle: "Perbandingan menu aktif vs total",
+        icon: TrendingUp,
+        tone: "amber",
+      },
+      {
+        title: "Skor Keseimbangan Gizi",
+        value: `${healthScore}/100`,
+        subtitle: "Indikator cepat kualitas rata-rata",
+        icon: Gauge,
+        tone: "rose",
+      },
+      {
+        title: "Rata-rata Kalori",
+        value: `${Math.round(stats.avg_nutrition?.avg_kalori || 0)} kkal`,
+        subtitle: "Energi rata-rata per menu",
+        icon: Zap,
+        tone: "violet",
+      },
+      {
+        title: "Rata-rata Protein",
+        value: `${Math.round(stats.avg_nutrition?.avg_protein || 0)} g`,
+        subtitle: "Dukungan kebutuhan pertumbuhan",
+        icon: Sparkles,
+        tone: "cyan",
+      },
+    ];
+  }, [stats]);
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-500" />
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="text-center py-16">
-        <UtensilsCrossed className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-        <p className="text-slate-500">Gagal memuat data. Pastikan backend aktif di port 3002.</p>
+      <div className="py-16 text-center">
+        <AlertCircle className="mx-auto mb-4 h-16 w-16 text-slate-300" />
+        <p className="text-slate-500">
+          Gagal memuat data. Pastikan backend aktif di port 3002.
+        </p>
       </div>
     );
   }
 
-  const nutritionCards = [
-    { label: 'Rata-rata Kalori', value: stats.avg_nutrition?.avg_kalori || 0, unit: 'kkal', color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Rata-rata Protein', value: stats.avg_nutrition?.avg_protein || 0, unit: 'g', color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Rata-rata Lemak', value: stats.avg_nutrition?.avg_lemak || 0, unit: 'g', color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Rata-rata Karbo', value: stats.avg_nutrition?.avg_karbohidrat || 0, unit: 'g', color: 'text-amber-600', bg: 'bg-amber-50' },
-  ];
-
   return (
     <div className="space-y-8">
-      {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-emerald-100 rounded-xl">
-              <UtensilsCrossed className="h-6 w-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">Total Menu</p>
-              <p className="text-3xl font-black text-slate-900">{stats.total_menus}</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {widgets.map((item) => {
+          const style = toneStyles[item.tone];
+          const Icon = item.icon;
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-indigo-100 rounded-xl">
-              <Zap className="h-6 w-6 text-indigo-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">Menu Aktif</p>
-              <p className="text-3xl font-black text-slate-900">{stats.active_menus}</p>
-            </div>
-          </div>
-        </div>
+          return (
+            <div
+              key={item.title}
+              className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${style.bg}`}
+            >
+              {/* Gambar transparan di belakang widget */}
+              <Icon
+                className={`pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 ${style.watermark} opacity-35`}
+              />
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow cursor-pointer" onClick={onNavigateToList}>
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-violet-100 rounded-xl">
-              <TrendingUp className="h-6 w-6 text-violet-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">Kategori</p>
-              <p className="text-3xl font-black text-slate-900">{stats.per_kategori?.length || 0}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Nutrition Averages */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-3 bg-emerald-100 rounded-xl">
-            <BarChart3 className="h-6 w-6 text-emerald-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">Rata-rata Gizi Seluruh Menu</h2>
-            <p className="text-sm text-slate-500">Ringkasan komposisi gizi rata-rata dari semua menu yang terdaftar</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {nutritionCards.map((card) => (
-            <div key={card.label} className={`${card.bg} rounded-xl p-4 text-center`}>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{card.label}</p>
-              <p className={`text-2xl font-black ${card.color}`}>{card.value}</p>
-              <p className="text-xs text-slate-400">{card.unit}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Category Breakdown */}
-      {stats.per_kategori && stats.per_kategori.length > 0 && (
-        <div className="bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-6 md:p-8 text-white">
-          <h3 className="text-xl font-bold mb-6">Distribusi Menu per Kategori</h3>
-          <div className="space-y-4">
-            {stats.per_kategori.map((kat) => {
-              const percentage = Math.round((kat.count / stats.total_menus) * 100);
-              return (
-                <div key={kat.kategori} className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium text-slate-300">{kat.kategori}</span>
-                    <span className="text-emerald-400 font-bold">{kat.count} menu ({percentage}%)</span>
+              <div className="relative z-10">
+                <div className="mb-4 flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      {item.title}
+                    </p>
+                    <p className="mt-1 text-3xl font-black text-slate-900">
+                      {item.value}
+                    </p>
                   </div>
-                  <div className="overflow-hidden h-2.5 rounded-full bg-slate-700">
+                  <div className={`rounded-xl p-2.5 ${style.chip}`}>
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <p className="max-w-[85%] text-xs font-medium text-slate-600">
+                  {item.subtitle}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-base font-bold text-slate-800">
+            Ringkasan Nutrisi Rata-rata
+          </h3>
+          <div className="space-y-4">
+            {[
+              {
+                label: "Kalori",
+                value: Number(stats.avg_nutrition?.avg_kalori || 0),
+                target: 550,
+                unit: "kkal",
+              },
+              {
+                label: "Protein",
+                value: Number(stats.avg_nutrition?.avg_protein || 0),
+                target: 25,
+                unit: "g",
+              },
+              {
+                label: "Lemak",
+                value: Number(stats.avg_nutrition?.avg_lemak || 0),
+                target: 18,
+                unit: "g",
+              },
+              {
+                label: "Karbohidrat",
+                value: Number(stats.avg_nutrition?.avg_karbohidrat || 0),
+                target: 75,
+                unit: "g",
+              },
+            ].map((row) => {
+              const pct = Math.max(
+                0,
+                Math.min(100, Math.round((row.value / row.target) * 100)),
+              );
+              return (
+                <div key={row.label} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold text-slate-700">
+                      {row.label}
+                    </span>
+                    <span className="text-slate-500">
+                      {Math.round(row.value)} {row.unit}
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
                     <div
-                      style={{ width: `${percentage}%` }}
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
-                    ></div>
+                      className="h-full rounded-full bg-linear-to-r from-emerald-500 to-emerald-600"
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
-      )}
+
+        <div className="rounded-2xl border border-violet-200 bg-linear-to-br from-violet-50 to-indigo-50 p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-xl bg-violet-600 p-2.5">
+              <Brain className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">
+                AI Insight Engine
+              </h3>
+              <p className="text-xs text-slate-500">
+                Mesin rekomendasi untuk analisis menu
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-sm text-slate-700">
+            <div className="flex items-center justify-between rounded-lg border border-violet-200 bg-white/70 px-3 py-2">
+              <span className="font-medium">Model</span>
+              <span className="font-bold text-violet-700">
+                {AI_ENGINE.model}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-violet-200 bg-white/70 px-3 py-2">
+              <span className="font-medium">Provider</span>
+              <span className="font-bold text-violet-700">
+                {AI_ENGINE.provider}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-violet-200 bg-white/70 px-3 py-2">
+              <span className="font-medium">Fallback</span>
+              <span className="font-bold text-violet-700">Active</span>
+            </div>
+          </div>
+
+          <button
+            onClick={onNavigateToList}
+            className="mt-5 w-full rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700"
+          >
+            Buka Katalog Menu
+          </button>
+
+          <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+            <ShieldCheck className="h-4 w-4 text-violet-600" />
+            Sistem tetap memberi rekomendasi walau API AI bermasalah.
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

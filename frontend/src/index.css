@@ -1,7 +1,112 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
+@theme {
+    --color-forest-50: #f1f8e9;
+    --color-forest-100: #dcedc8;
+    --color-forest-200: #c5e1a5;
+    --color-forest-300: #a5d6a7;
+    --color-forest-400: #81c784;
+    --color-forest-500: #66bb6a;
+    --color-forest-600: #4caf50;
+    --color-forest-700: #43a047;
+    --color-forest-800: #388e3c;
+    --color-forest-900: #2e7d32;
+    --color-warn: #ffa726;
+    --color-danger: #ef5350;
+    --radius-card: 16px;
+}
+
 @layer base {
-  body {
-    @apply bg-slate-50 text-slate-900 antialiased;
-  }
+    body {
+        background:
+            radial-gradient(circle at 8% 10%, rgba(129, 199, 132, 0.28), transparent 42%),
+            radial-gradient(circle at 92% 0%, rgba(165, 214, 167, 0.42), transparent 45%),
+            linear-gradient(160deg, #f4f9ee 0%, #ecf5e8 45%, #f8fbf6 100%);
+        color: #1a1a1a;
+        font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
+        letter-spacing: -0.01em;
+    }
+}
+
+@layer utilities {
+    .card {
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(108, 144, 95, 0.14);
+        border-radius: 16px;
+        box-shadow: 0 14px 28px rgba(46, 71, 38, 0.09);
+    }
+    .card-hover {
+        transition:
+            box-shadow 0.25s,
+            transform 0.25s,
+            border-color 0.25s;
+    }
+    .card-hover:hover {
+        box-shadow: 0 16px 34px rgba(39, 79, 45, 0.16);
+        transform: translateY(-4px);
+        border-color: rgba(70, 130, 73, 0.28);
+    }
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+            background 0.15s,
+            color 0.15s;
+        color: #555;
+    }
+    .nav-item:hover {
+        background: #e9f5e7;
+        color: #205f2b;
+    }
+    .nav-item.active {
+        background: linear-gradient(135deg, #2e7d32, #478f4c);
+        color: white;
+        box-shadow: 0 8px 18px rgba(49, 122, 55, 0.25);
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #2f7d34, #4b9a4f);
+        color: white;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        transition:
+            transform 0.2s,
+            box-shadow 0.2s,
+            filter 0.2s;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 10px 18px rgba(43, 124, 56, 0.24);
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        filter: saturate(1.08);
+        box-shadow: 0 12px 20px rgba(43, 124, 56, 0.3);
+    }
+    .progress-bar {
+        height: 8px;
+        border-radius: 999px;
+        background: #dcedc8;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.5s ease;
+    }
 }

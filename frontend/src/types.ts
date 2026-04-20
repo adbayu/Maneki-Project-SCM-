@@ -1,5 +1,5 @@
 // ============================================================
-// Types for Menu Planning & Analisis Gizi Module
+// Types — Menu Planning & Analisis Gizi (Updated)
 // ============================================================
 
 export interface MenuIngredient {
@@ -9,6 +9,8 @@ export interface MenuIngredient {
   nama_bahan: string;
   jumlah: number;
   satuan: string;
+  harga_satuan?: number; // harga per satuan (Rp/kg atau Rp/liter)
+  subtotal?: number; // calculated: jumlah * harga_satuan (adjusted)
 }
 
 export interface MenuNutrition {
@@ -20,9 +22,10 @@ export interface MenuNutrition {
   karbohidrat: number;
   serat: number;
   gula: number;
+  vitamins?: number; // % of daily value
 }
 
-export type MenuKategori = 'Sarapan' | 'Makan Siang' | 'Makan Malam' | 'Snack' | 'Minuman';
+export type MenuKategori = "Siswa" | "Balita" | "Ibu Hamil";
 
 export interface Menu {
   id: number;
@@ -30,7 +33,9 @@ export interface Menu {
   kategori: MenuKategori;
   deskripsi: string | null;
   gambar_url: string | null;
+  harga_jual: number;
   is_active: number;
+  is_substituted?: number;
   created_at: string;
   updated_at: string;
   // Joined fields
@@ -40,6 +45,9 @@ export interface Menu {
   karbohidrat?: number;
   serat?: number;
   gula?: number;
+  // Calculated
+  hpp?: number;
+  profit_pct?: number;
   // Detailed
   ingredients?: MenuIngredient[];
   nutrition?: MenuNutrition | null;
@@ -51,14 +59,14 @@ export interface NutrientAnalysis {
   unit: string;
   min: number;
   max: number;
-  status: 'optimal' | 'rendah' | 'berlebih';
+  status: "optimal" | "rendah" | "berlebih";
   score: number;
 }
 
 export interface AIRecommendation {
   jenis: string;
   nutrient: string | null;
-  severity: 'success' | 'warning' | 'danger';
+  severity: "success" | "warning" | "danger";
   pesan: string;
   detail: string | null;
 }
@@ -71,6 +79,7 @@ export interface AIAnalysisResult {
   detail_analisis: Record<string, NutrientAnalysis>;
   rekomendasi: AIRecommendation[];
   standar_referensi: string;
+  ai_engine: string;
   analyzed_at: string;
 }
 
@@ -84,4 +93,85 @@ export interface MenuStats {
     avg_karbohidrat: number;
   };
   per_kategori: Array<{ kategori: string; count: number }>;
+}
+
+export type KelompokSasaran = "balita" | "siswa" | "ibu_hamil";
+
+export interface GroupTargetNutrisi {
+  id: KelompokSasaran;
+  label: string;
+  sublabel: string;
+  icon: string;
+  kalori_min: number;
+  kalori_max: number;
+  protein: number;
+  karbo: number;
+  lemak: number;
+  serat: number;
+  // Khusus ibu hamil
+  fe?: number;
+  ca?: number;
+  folat?: number;
+}
+
+export interface HPPGroup {
+  group: string;
+  label: string;
+  sublabel: string;
+  kalori_target: string;
+  hpp_per_porsi: number;
+  ingredients: Array<MenuIngredient & { subtotal: number }>;
+  anggaran: {
+    bulan: number;
+    terpakai: number;
+    stok_gudang_pct: number;
+    prediksi_hari: number;
+    bottleneck: string;
+    bottleneck_sisa: string;
+  };
+}
+
+export interface GeneratedMenu {
+  nama_menu: string;
+  deskripsi: string;
+  metode_masak: string;
+  estimasi_gizi: {
+    kalori: number;
+    protein: number;
+    lemak: number;
+    karbohidrat: number;
+    serat: number;
+    gula: number;
+  };
+  bahan_digunakan: Array<{
+    nama: string;
+    jumlah: number;
+    satuan: string;
+    catatan?: string;
+  }>;
+  bahan_kurang: Array<{
+    nama: string;
+    jumlah_butuh: number;
+    satuan: string;
+    alasan: string;
+  }>;
+  tips_gizi: string;
+  sesuai_target: boolean;
+  kelompok: string;
+  kategori: string;
+  generated_at: string;
+}
+
+export type PageView =
+  | "dashboard"
+  | "menu-catalog"
+  | "recipe-builder"
+  | "ai-lab"
+  | "smart-stock"
+  | "financial";
+
+export interface AuthUser {
+  username: string;
+  role: string;
+  nama: string;
 }
