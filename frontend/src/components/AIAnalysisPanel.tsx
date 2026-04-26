@@ -115,10 +115,14 @@ export default function AIAnalysisPanel({
 
   const getSeverityIcon = (severity: string) => {
     if (severity === "success") {
-      return <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />;
+      return (
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+      );
     }
     if (severity === "warning") {
-      return <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />;
+      return (
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+      );
     }
     return <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />;
   };
@@ -255,7 +259,9 @@ export default function AIAnalysisPanel({
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-4xl font-black ${getScoreText(analysis.skor_gizi)}`}>
+                <span
+                  className={`text-4xl font-black ${getScoreText(analysis.skor_gizi)}`}
+                >
                   {analysis.skor_gizi}
                 </span>
                 <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
@@ -280,6 +286,11 @@ export default function AIAnalysisPanel({
                     <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
                       {data.label}
                     </p>
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${getStatusChip(data.status)}`}
+                    >
+                      {data.status}
+                    </span>
                     <p className="mt-2 text-2xl font-bold text-ink-700">
                       {data.value}
                       <span className="ml-1 text-xs font-medium text-ink-400">
@@ -287,11 +298,6 @@ export default function AIAnalysisPanel({
                       </span>
                     </p>
                   </div>
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${getStatusChip(data.status)}`}
-                  >
-                    {data.status}
-                  </span>
                 </div>
 
                 <div className="progress-bar">
@@ -316,8 +322,12 @@ export default function AIAnalysisPanel({
                 <Brain className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-sm font-bold text-ink-700">Ringkasan Insight</p>
-                <p className="text-xs text-ink-400">{analysis.standar_referensi}</p>
+                <p className="text-sm font-bold text-ink-700">
+                  Ringkasan Insight
+                </p>
+                <p className="text-xs text-ink-400">
+                  {analysis.standar_referensi}
+                </p>
               </div>
             </div>
 
@@ -335,7 +345,9 @@ export default function AIAnalysisPanel({
                           {rec.nutrient}
                         </span>
                       )}
-                      <p className="text-sm leading-6 text-ink-700">{rec.pesan}</p>
+                      <p className="text-sm leading-6 text-ink-700">
+                        {rec.pesan}
+                      </p>
                       {rec.detail && (
                         <p className="mt-1 text-xs leading-6 text-ink-400">
                           {rec.detail}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, Search, Sparkles } from "lucide-react";
+import { Bell, MoonStar, Search, Sparkles, SunMedium } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -13,7 +13,7 @@ function SmartStockPage() {
   return (
     <div className="page-shell">
       <div className="card p-8 sm:p-10">
-        <div className="surface-muted flex min-h-[320px] flex-col items-center justify-center gap-4 p-8 text-center">
+        <div className="surface-muted flex min-h-80 flex-col items-center justify-center gap-4 p-8 text-center">
           <span className="soft-badge">Coming Soon</span>
           <div>
             <h2 className="page-title text-[2rem]">Smart Stock</h2>
@@ -35,19 +35,23 @@ const PAGE_META: Record<
 > = {
   dashboard: {
     label: "Dashboard",
-    description: "Ringkasan operasional menu, status nutrisi, dan rencana mingguan.",
+    description:
+      "Ringkasan operasional menu, status nutrisi, dan rencana mingguan.",
   },
   "menu-catalog": {
     label: "Menu Catalog",
-    description: "Kelola seluruh katalog menu dalam tampilan yang lebih rapi dan profesional.",
+    description:
+      "Kelola seluruh katalog menu dalam tampilan yang lebih rapi dan profesional.",
   },
   "recipe-builder": {
     label: "Recipe Builder",
-    description: "Form tambah dan edit menu dengan panel kerja yang lebih lega dan fokus.",
+    description:
+      "Form tambah dan edit menu dengan panel kerja yang lebih lega dan fokus.",
   },
   "ai-lab": {
     label: "AI Nutrition Lab",
-    description: "Analitik AI dengan presentasi data yang lebih bersih dan mudah dibaca.",
+    description:
+      "Analitik AI dengan presentasi data yang lebih bersih dan mudah dibaca.",
   },
   "smart-stock": {
     label: "Smart Stock",
@@ -58,9 +62,16 @@ const PAGE_META: Record<
 interface TopbarProps {
   activePage: PageView;
   user: AuthUser;
+  isNightMode: boolean;
+  onToggleTheme: () => void;
 }
 
-function AppTopbar({ activePage, user }: TopbarProps) {
+function AppTopbar({
+  activePage,
+  user,
+  isNightMode,
+  onToggleTheme,
+}: TopbarProps) {
   const meta = PAGE_META[activePage as Exclude<PageView, "financial">];
 
   return (
@@ -82,7 +93,7 @@ function AppTopbar({ activePage, user }: TopbarProps) {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative min-w-0 flex-1 sm:min-w-[260px]">
+          <div className="relative min-w-0 flex-1 sm:min-w-65">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             <input
               readOnly
@@ -98,11 +109,29 @@ function AppTopbar({ activePage, user }: TopbarProps) {
               className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/70 bg-white/90 text-ink-500 shadow-sm transition hover:-translate-y-0.5 hover:text-forest-900"
               aria-label="Notifikasi"
             >
-              <Bell className="h-[18px] w-[18px]" />
+              <Bell className="h-4.5 w-4.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/70 bg-white/90 text-ink-500 shadow-sm transition hover:-translate-y-0.5 hover:text-forest-900"
+              aria-label={
+                isNightMode ? "Aktifkan mode terang" : "Aktifkan night mode"
+              }
+              title={
+                isNightMode ? "Aktifkan mode terang" : "Aktifkan night mode"
+              }
+            >
+              {isNightMode ? (
+                <SunMedium className="h-4.5 w-4.5" />
+              ) : (
+                <MoonStar className="h-4.5 w-4.5" />
+              )}
             </button>
 
             <div className="flex items-center gap-3 rounded-[22px] border border-white/70 bg-white/92 px-3 py-2 shadow-sm">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-forest-900 to-forest-700 text-sm font-bold text-white">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-forest-900 to-forest-700 text-sm font-bold text-white">
                 {(user.nama || user.username).slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0">
@@ -124,6 +153,23 @@ function AppTopbar({ activePage, user }: TopbarProps) {
 export default function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [activePage, setActivePage] = useState<PageView>("dashboard");
+  const [isNightMode, setIsNightMode] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("mbg_theme_mode");
+    const nightMode = savedTheme === "night";
+    setIsNightMode(nightMode);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("night-mode", isNightMode);
+    document.body.classList.toggle("night-mode", isNightMode);
+    document.documentElement.setAttribute(
+      "data-theme",
+      isNightMode ? "night" : "day",
+    );
+    localStorage.setItem("mbg_theme_mode", isNightMode ? "night" : "day");
+  }, [isNightMode]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("mbg_user");
@@ -148,6 +194,10 @@ export default function App() {
     setActivePage("dashboard");
   };
 
+  const toggleTheme = () => {
+    setIsNightMode((prev) => !prev);
+  };
+
   const renderedPage = useMemo(() => {
     switch (activePage) {
       case "dashboard":
@@ -169,7 +219,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto flex min-h-screen max-w-[1720px] flex-col gap-4 px-3 py-3 sm:px-4 sm:py-4 lg:flex-row lg:gap-5 lg:px-5 lg:py-5">
+      <div className="mx-auto flex min-h-screen max-w-430 flex-col gap-4 px-3 py-3 sm:px-4 sm:py-4 lg:flex-row lg:gap-5 lg:px-5 lg:py-5">
         <Sidebar
           activePage={activePage}
           onNavigate={setActivePage}
@@ -178,7 +228,12 @@ export default function App() {
         />
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <AppTopbar activePage={activePage} user={user} />
+          <AppTopbar
+            activePage={activePage}
+            user={user}
+            isNightMode={isNightMode}
+            onToggleTheme={toggleTheme}
+          />
 
           <main className="min-w-0 flex-1">
             <AnimatePresence mode="wait">

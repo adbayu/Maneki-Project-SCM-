@@ -50,11 +50,9 @@ export default function Sidebar({
             <Leaf className="h-5 w-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-base font-bold text-ink-700">
-              Maneki SCM
-            </p>
+            <p className="truncate text-base font-bold text-ink-700">MBG SCM</p>
             <p className="text-[11px] uppercase tracking-[0.18em] text-ink-400">
-              MBG Operations
+              Analisis Gizi & Perencanaan Menu
             </p>
           </div>
         </div>

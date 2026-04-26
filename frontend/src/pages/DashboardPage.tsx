@@ -90,6 +90,66 @@ interface WeekDay {
   isToday: boolean;
 }
 
+type MicroNutrientKey = "serat" | "gula" | "vitamin" | "kalsium" | "zat_besi";
+
+interface MicroNutrientFieldConfig {
+  key: MicroNutrientKey;
+  abbr: string;
+  label: string;
+  unit: string;
+  target: number;
+  color: string;
+  helper: string;
+}
+
+const MICRO_NUTRIENT_FIELDS: MicroNutrientFieldConfig[] = [
+  {
+    key: "serat",
+    abbr: "Sr",
+    label: "Serat",
+    unit: "g",
+    target: 20,
+    color: "#10b981",
+    helper: "Bantu pencernaan dan rasa kenyang.",
+  },
+  {
+    key: "gula",
+    abbr: "Gl",
+    label: "Gula",
+    unit: "g",
+    target: 25,
+    color: "#f59e0b",
+    helper: "Jaga agar tetap terkontrol.",
+  },
+  {
+    key: "vitamin",
+    abbr: "Vi",
+    label: "Vitamin",
+    unit: "%",
+    target: 100,
+    color: "#8b5cf6",
+    helper: "Isi persen kecukupan bila sudah dihitung.",
+  },
+  {
+    key: "kalsium",
+    abbr: "Ca",
+    label: "Kalsium",
+    unit: "mg",
+    target: 650,
+    color: "#14b8a6",
+    helper: "Penting untuk tulang dan gigi.",
+  },
+  {
+    key: "zat_besi",
+    abbr: "Fe",
+    label: "Zat Besi",
+    unit: "mg",
+    target: 10,
+    color: "#ef4444",
+    helper: "Mendukung energi dan darah.",
+  },
+];
+
 function createEmptyDayPlan(): DayPlan {
   return { makananIds: [], minumanIds: [] };
 }
@@ -178,11 +238,107 @@ function getPorsiBadgeClass(porsi: MenuPorsi) {
     : "bg-sky-100 text-sky-700";
 }
 
-function progressColor(v: number, t: number) {
-  const r = t > 0 ? v / t : 0;
-  if (r >= 0.9 && r <= 1.1) return "#10b981";
-  if (r >= 0.75) return "#f59e0b";
-  return "#ef4444";
+function getAkgStatus(percent: number) {
+  if (percent < 70) {
+    return {
+      label: "Sangat Kurang",
+      badgeClass: "border border-red-200 bg-red-100 text-red-900",
+      textClass: "text-red-700",
+      ringColor: "#7f1d1d",
+      barColor: "#7f1d1d",
+      hint: "Jauh di bawah target harian.",
+    };
+  }
+
+  if (percent < 80) {
+    return {
+      label: "Kurang",
+      badgeClass: "border border-red-200 bg-red-50 text-red-700",
+      textClass: "text-red-700",
+      ringColor: "#ef4444",
+      barColor: "#ef4444",
+      hint: "Masih kurang dari target yang dianjurkan.",
+    };
+  }
+
+  if (percent < 90) {
+    return {
+      label: "Cukup",
+      badgeClass: "border border-amber-200 bg-amber-100 text-amber-800",
+      textClass: "text-amber-700",
+      ringColor: "#f59e0b",
+      barColor: "#f59e0b",
+      hint: "Sudah mendekati target, masih bisa ditingkatkan.",
+    };
+  }
+
+  if (percent < 100) {
+    return {
+      label: "Baik",
+      badgeClass: "border border-emerald-200 bg-emerald-100 text-emerald-800",
+      textClass: "text-emerald-700",
+      ringColor: "#10b981",
+      barColor: "#10b981",
+      hint: "Masih dalam zona aman dan mendekati target.",
+    };
+  }
+
+  if (percent <= 110) {
+    return {
+      label: "Sangat Baik",
+      badgeClass: "border border-emerald-300 bg-emerald-200 text-emerald-900",
+      textClass: "text-emerald-800",
+      ringColor: "#166534",
+      barColor: "#166534",
+      hint: "Sangat dekat dengan target dan masih aman.",
+    };
+  }
+
+  if (percent <= 120) {
+    return {
+      label: "Over",
+      badgeClass: "border border-red-200 bg-red-100 text-red-800",
+      textClass: "text-red-700",
+      ringColor: "#ef4444",
+      barColor: "#ef4444",
+      hint: "Sudah melewati batas aman.",
+    };
+  }
+
+  return {
+    label: "Terlalu Over",
+    badgeClass: "border border-red-300 bg-red-200 text-red-950",
+    textClass: "text-red-800",
+    ringColor: "#7f1d1d",
+    barColor: "#7f1d1d",
+    hint: "Terlalu tinggi dibanding target harian.",
+  };
+}
+
+function getNutritionStatus(v: number, t: number) {
+  const ratio = t > 0 ? v / t : 0;
+
+  if (ratio >= 1) {
+    return {
+      label: "Baik",
+      badgeClass: "bg-emerald-100 text-emerald-700",
+      ratio,
+    };
+  }
+
+  if (ratio >= 0.8) {
+    return {
+      label: "Cukup",
+      badgeClass: "bg-amber-100 text-amber-700",
+      ratio,
+    };
+  }
+
+  return {
+    label: "Kurang",
+    badgeClass: "bg-red-100 text-red-600",
+    ratio,
+  };
 }
 
 function MiniDonut({
@@ -385,6 +541,63 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
       ),
     [piringkuMenus],
   );
+
+  const plateMicroNutrition = useMemo(
+    () =>
+      piringkuMenus.reduce(
+        (acc, menu) => {
+          acc.serat += Number(menu.serat ?? menu.nutrition?.serat ?? 0);
+          acc.gula += Number(menu.gula ?? menu.nutrition?.gula ?? 0);
+          acc.vitamin += Number(menu.nutrition?.vitamins ?? 0);
+          return acc;
+        },
+        { serat: 0, gula: 0, vitamin: 0 },
+      ),
+    [piringkuMenus],
+  );
+
+  const plateAkgPercent = Math.max(
+    0,
+    Math.round((plateNutrition.kalori / STANDAR[kelompok].kalori) * 100),
+  );
+  const plateAkgStatus = getAkgStatus(plateAkgPercent);
+
+  const microStatus = useMemo(
+    () =>
+      MICRO_NUTRIENT_FIELDS.map((field) => {
+        const displayValue =
+          field.key === "serat"
+            ? plateMicroNutrition.serat
+            : field.key === "gula"
+              ? plateMicroNutrition.gula
+              : field.key === "vitamin"
+                ? plateMicroNutrition.vitamin
+                : 0;
+
+        return {
+          ...field,
+          value: displayValue,
+          status: getNutritionStatus(displayValue, field.target),
+        };
+      }),
+    [
+      plateMicroNutrition.gula,
+      plateMicroNutrition.serat,
+      plateMicroNutrition.vitamin,
+    ],
+  );
+
+  const plateNote =
+    plateAkgStatus.label === "Sangat Baik" || plateAkgStatus.label === "Baik"
+      ? "Komposisi sudah dekat dengan target. Tambahkan sayur dan buah agar serat dan vitamin makin lengkap."
+      : plateAkgStatus.label === "Cukup" || plateAkgStatus.label === "Kurang"
+        ? "Kebutuhan utama sudah terpenuhi, tapi masih ada ruang untuk memperbaiki serat dan mikronutrien."
+        : plateAkgStatus.label === "Sangat Kurang"
+          ? "Piring ini masih terlalu rendah. Tambahkan lauk, sayur, dan sumber energi agar lebih seimbang."
+          : "Piring ini sudah melewati batas aman. Kurangi porsi dan sesuaikan kembali komposisinya.";
+
+  const plateTip =
+    "Padukan protein hewani, sayur hijau, dan buah warna-warni untuk menyeimbangkan piring dengan cara yang mudah dipahami.";
 
   const std = STANDAR[kelompok];
   const rows = [
@@ -656,8 +869,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
           <span className="soft-badge">Operations Overview</span>
           <h1 className="page-title mt-4">Dashboard MBG</h1>
           <p className="page-subtitle">
-            {today}. Pantau menu, evaluasi nutrisi, dan susun jadwal mingguan
-            dalam satu workspace yang lebih lega dan fokus.
+            Pantau menu, evaluasi nutrisi, dan susun jadwal mingguan dalam satu
+            workspace yang lebih lega dan fokus.
           </p>
         </div>
         <div className="card min-w-[220px] rounded-[30px] p-4 sm:p-5">
@@ -735,14 +948,14 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="card rounded-[32px] p-6"
+          className="card rounded-4xl border border-ink-100/60 bg-white/90 p-5 shadow-sm"
         >
-          <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
                 Personal Plate Monitor
@@ -754,7 +967,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                 Pilih menu atau seret kartu dari daftar bawah ke area piringku.
               </p>
             </div>
-            <div className="rounded-[22px] bg-forest-50 px-4 py-3 text-right">
+            <div className="rounded-[20px] border border-forest-100 bg-forest-50 px-4 py-3 text-right">
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/70">
                 Target
               </p>
@@ -764,7 +977,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             </div>
           </div>
 
-          <div className="pill-toggle mb-4">
+          <div className="pill-toggle mb-4 rounded-[22px] border border-ink-100 bg-white p-1">
             {(Object.keys(STANDAR) as Kelompok[]).map((k) => (
               <button
                 key={k}
@@ -777,7 +990,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             ))}
           </div>
 
-          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-[1.2fr_0.8fr]">
             <select
               value={selectedMenuId || ""}
               onChange={(e) => setSelectedMenuId(Number(e.target.value))}
@@ -804,7 +1017,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               const id = Number(e.dataTransfer.getData("menu-id"));
               if (id) addMenu(id);
             }}
-            className="mb-5 flex min-h-16 flex-wrap gap-2 rounded-[24px] border border-dashed border-forest-300 bg-[linear-gradient(180deg,#f5faf4_0%,#ffffff_100%)] p-4"
+            className="mb-5 flex min-h-16 flex-wrap gap-2 rounded-[24px] border border-dashed border-forest-300 bg-[linear-gradient(180deg,#f7fbf7_0%,#ffffff_100%)] p-4"
           >
             {piringkuMenus.map((m) => {
               const thumbUrl = resolveMenuImageUrl(m.gambar_url);
@@ -843,37 +1056,158 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-[24px] border border-ink-100 bg-white/75 p-4">
-              {rows.map((r) => {
-                const pct = Math.min(100, Math.round((r.val / r.target) * 100));
-                return (
-                  <div key={r.label} className="mb-3">
-                    <div className="mb-1.5 flex justify-between text-[11px] text-gray-600">
-                      <span className="font-medium">{r.label}</span>
-                      <span className="font-semibold">
-                        {Math.round(r.val)}/{r.target} {r.unit}
-                      </span>
-                    </div>
-                    <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        style={{
-                          width: `${pct}%`,
-                          backgroundColor: progressColor(r.val, r.target),
-                        }}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="rounded-3xl border border-ink-100 bg-white/85 p-4 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                    Ringkasan Gizi
+                  </p>
+                  <h3 className="mt-1 text-base font-bold text-ink-700">
+                    Total AKG Harian
+                  </h3>
+                </div>
+                <div
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${plateAkgStatus.badgeClass}`}
+                >
+                  {plateAkgStatus.label}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-[0.88fr_1.12fr]">
+                <div className="rounded-3xl border border-forest-100 bg-linear-to-b from-forest-50 to-white px-4 py-5 text-center">
+                  <motion.div
+                    className="relative mx-auto flex h-48 w-48 items-center justify-center"
+                    animate={{ scale: plateNutrition.kalori > 0 ? 1 : 0.98 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                  >
+                    <svg viewBox="0 0 44 44" className="h-48 w-48 -rotate-90">
+                      <circle
+                        cx="22"
+                        cy="22"
+                        r="18.5"
+                        fill="none"
+                        stroke="#e5efe5"
+                        strokeWidth="6"
                       />
+                      <motion.circle
+                        cx="22"
+                        cy="22"
+                        r="18.5"
+                        fill="none"
+                        stroke={plateAkgStatus.ringColor}
+                        strokeLinecap="round"
+                        strokeWidth="6"
+                        initial={{ pathLength: 0 }}
+                        animate={{
+                          pathLength: Math.min(1, plateAkgPercent / 100),
+                        }}
+                        transition={{ duration: 0.85, ease: "easeOut" }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-forest-700 shadow-sm">
+                        <Gauge className="h-5 w-5" />
+                      </div>
+                      <motion.p
+                        key={plateAkgPercent}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className={`mt-2 text-4xl font-black ${plateAkgStatus.textClass}`}
+                      >
+                        {plateAkgPercent}%
+                      </motion.p>
+                      <p
+                        className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${plateAkgStatus.textClass}`}
+                      >
+                        {plateAkgStatus.label}
+                      </p>
                     </div>
+                  </motion.div>
+                  <p className="mt-3 text-sm font-semibold text-ink-700">
+                    {Math.round(plateNutrition.kalori)} /{" "}
+                    {STANDAR[kelompok].kalori} kkal
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-ink-400">
+                    Disesuaikan dengan standar {STANDAR[kelompok].label}.
+                  </p>
+                </div>
+
+                <div className="space-y-3 rounded-3xl border border-ink-100 bg-white/80 p-4 shadow-sm">
+                  {rows.map((r) => {
+                    const pct = Math.max(
+                      0,
+                      Math.round((r.val / r.target) * 100),
+                    );
+                    const status = getAkgStatus(pct);
+
+                    return (
+                      <div
+                        key={r.label}
+                        className="rounded-2xl border border-gray-100 bg-white px-4 py-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700">
+                              {r.label}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                              {Math.round(r.val)} / {r.target} {r.unit}
+                            </p>
+                          </div>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${status.badgeClass}`}
+                          >
+                            {status.label}
+                          </span>
+                        </div>
+                        <div className="progress-bar mt-2 h-2">
+                          <div
+                            className="progress-fill"
+                            style={{
+                              width: `${pct}%`,
+                              backgroundColor: status.barColor,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div className="rounded-2xl border border-forest-100 bg-forest-50/70 px-4 py-3 text-sm text-forest-800">
+                    <p className="font-semibold">
+                      {plateAkgStatus.label === "Baik"
+                        ? "Komposisi sudah sesuai anjuran"
+                        : plateAkgStatus.label === "Cukup"
+                          ? "Komposisi sudah mendekati target"
+                          : "Komposisi masih perlu dilengkapi"}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-forest-700/80">
+                      {plateNote}
+                    </p>
                   </div>
-                );
-              })}
+                </div>
+              </div>
             </div>
-            <div className="rounded-[24px] border border-ink-100 bg-[linear-gradient(180deg,#fcfdfc_0%,#f2f6f2_100%)] p-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
-                Komposisi Makro
-              </p>
-              <div className="mt-4 flex items-center gap-4">
-                <svg viewBox="0 0 42 42" className="h-28 w-28">
+
+            <div className="rounded-3xl border border-ink-100 bg-linear-to-b from-white to-forest-50/70 p-4 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                    Komposisi Makronutrien
+                  </p>
+                  <h3 className="mt-1 text-base font-bold text-ink-700">
+                    Rasio Makro Harian
+                  </h3>
+                </div>
+                <div className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-forest-700 shadow-sm">
+                  {Math.round(macroTotal)} g total
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <svg viewBox="0 0 42 42" className="h-32 w-32">
                   {(() => {
                     let start = 0;
                     return slices.map((s) => {
@@ -897,38 +1231,187 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                     });
                   })()}
                 </svg>
-                <div>
+
+                <div className="min-w-0 flex-1 space-y-3">
                   {slices.map((s) => {
                     const pct =
                       macroTotal > 0
                         ? Math.round((s.value / macroTotal) * 100)
                         : 0;
+                    const kcal =
+                      s.key === "lemak"
+                        ? Math.round(s.value * 9)
+                        : Math.round(s.value * 4);
+
                     return (
                       <div
                         key={s.key}
-                        className="mb-1 flex items-center gap-1.5"
+                        className="flex items-center justify-between gap-3"
                       >
-                        <span
-                          className="h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: s.color }}
-                        />
-                        <span className="text-[11px] font-medium text-gray-600">
-                          {s.label}: {pct}%
-                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-700">
+                            {s.label}
+                          </p>
+                          <p className="text-[11px] text-gray-400">
+                            {Math.round(s.value)} g
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-gray-700">
+                            {pct}%
+                          </p>
+                          <p className="text-[11px] text-gray-400">
+                            {kcal} kkal
+                          </p>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
+
+              <div>
+                <div className="mt-4 rounded-2xl border border-forest-100 bg-white px-4 py-3 mb-5">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-forest-800">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-forest-100 text-forest-700">
+                      <Activity className="h-3.5 w-3.5" />
+                    </div>
+                    Komposisi makro sesuai anjuran
+                  </div>
+
+                  <p className="mt-1 text-xs leading-5 text-forest-700/80">
+                    Rasio makro dalam rentang yang dianjurkan untuk{" "}
+                    {STANDAR[kelompok].label.toLowerCase()}.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-4 shadow-sm mb-5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                      <Activity className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-700/80">
+                        Catatan
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm leading-6 text-amber-900/80">
+                    {plateNote}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-forest-100 bg-forest-50/70 p-4 shadow-sm">
+                  <div className="mb-3 flex items-center gap-2 text-forest-800">
+                    <TrendingUp className="h-4 w-4" />
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
+                      Tips
+                    </p>
+                  </div>
+                  <p className="text-sm leading-6 text-forest-800/80">
+                    {plateTip}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-5">
+            <div className="rounded-3xl border border-ink-100 bg-white p-4 shadow-sm">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/80">
+                    Mikronutrien Penting
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                {microStatus.map((field) => {
+                  const shownValue = Math.round(field.value);
+                  const percent =
+                    field.target > 0
+                      ? Math.min(
+                          100,
+                          Math.round((field.value / field.target) * 100),
+                        )
+                      : 0;
+
+                  return (
+                    <div
+                      key={field.key}
+                      className="rounded-2xl border bg-linear-to-b from-gray-50 to-white p-3 shadow-sm"
+                      style={{ borderColor: `${field.color}33` }}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="flex h-8 w-8 items-center justify-center rounded-xl"
+                            style={{
+                              backgroundColor: `${field.color}18`,
+                              color: field.color,
+                            }}
+                          >
+                            <span className="text-[10px] font-black uppercase">
+                              {field.abbr}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-700">
+                              {field.label}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                              {field.helper}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={`rounded-full px-2 py-1 text-[10px] font-bold ${field.status.badgeClass}`}
+                        >
+                          {field.status.label}
+                        </span>
+                      </div>
+
+                      <div className="flex items-end justify-between gap-2">
+                        <div>
+                          <p className="text-2xl font-black text-gray-800">
+                            {shownValue}
+                          </p>
+                          <p className="text-[11px] text-gray-400">
+                            {field.unit} / target {field.target}
+                            {field.unit}
+                          </p>
+                        </div>
+                        <div className="w-24 text-right">
+                          <p className="text-xs font-semibold text-gray-500">
+                            {percent}%
+                          </p>
+                          <div className="progress-bar mt-1 h-2">
+                            <div
+                              className="progress-fill"
+                              style={{
+                                width: `${percent}%`,
+                                backgroundColor: field.color,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2"></div>
             </div>
           </div>
         </motion.div>
 
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card rounded-[32px] p-6"
+          className="card rounded-4xl p-4 xl:self-start xl:p-5"
         >
           <div className="mb-4 flex items-center gap-2">
             <div className="rounded-2xl bg-forest-50 p-2.5">
@@ -948,76 +1431,81 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
           </div>
 
           {stats && (
-            <div className="space-y-4">
-              {[
-                {
-                  label: "Kalori",
-                  value: Number(stats.avg_nutrition?.avg_kalori || 0),
-                  target: 550,
-                  unit: "kkal",
-                  color: "#ef4444",
-                },
-                {
-                  label: "Protein",
-                  value: Number(stats.avg_nutrition?.avg_protein || 0),
-                  target: 25,
-                  unit: "g",
-                  color: "#10b981",
-                },
-                {
-                  label: "Lemak",
-                  value: Number(stats.avg_nutrition?.avg_lemak || 0),
-                  target: 18,
-                  unit: "g",
-                  color: "#f59e0b",
-                },
-                {
-                  label: "Karbohidrat",
-                  value: Number(stats.avg_nutrition?.avg_karbohidrat || 0),
-                  target: 75,
-                  unit: "g",
-                  color: "#8b5cf6",
-                },
-              ].map((row) => {
-                const pct = Math.max(
-                  0,
-                  Math.min(100, Math.round((row.value / row.target) * 100)),
-                );
-                return (
-                  <div key={row.label} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold text-gray-700">
-                        {row.label}
-                      </span>
-                      <span className="font-medium text-gray-500">
-                        {Math.round(row.value)}
-                        <span className="ml-1 text-xs text-gray-400">
-                          {row.unit}
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  {
+                    label: "Kalori",
+                    value: Number(stats.avg_nutrition?.avg_kalori || 0),
+                    target: 550,
+                    unit: "kkal",
+                    color: "#ef4444",
+                  },
+                  {
+                    label: "Protein",
+                    value: Number(stats.avg_nutrition?.avg_protein || 0),
+                    target: 25,
+                    unit: "g",
+                    color: "#10b981",
+                  },
+                  {
+                    label: "Lemak",
+                    value: Number(stats.avg_nutrition?.avg_lemak || 0),
+                    target: 18,
+                    unit: "g",
+                    color: "#f59e0b",
+                  },
+                  {
+                    label: "Karbohidrat",
+                    value: Number(stats.avg_nutrition?.avg_karbohidrat || 0),
+                    target: 75,
+                    unit: "g",
+                    color: "#8b5cf6",
+                  },
+                ].map((row) => {
+                  const pct = Math.max(
+                    0,
+                    Math.min(100, Math.round((row.value / row.target) * 100)),
+                  );
+                  return (
+                    <div
+                      key={row.label}
+                      className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-semibold text-gray-700">
+                          {row.label}
                         </span>
-                      </span>
+                        <span className="font-medium text-gray-500">
+                          {Math.round(row.value)}
+                          <span className="ml-1 text-xs text-gray-400">
+                            {row.unit}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: row.color }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: row.color }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
 
-              <div className="mt-4 border-t border-gray-100 pt-4">
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/80 p-3">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">
                   Distribusi Kategori
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {stats.per_kategori?.map((k) => (
                     <div
                       key={k.kategori}
-                      className="flex items-center gap-1.5 rounded-lg border border-gray-100 bg-gray-50 px-3 py-1.5"
+                      className="flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-1.5"
                     >
                       <span className="text-xs font-bold text-gray-700">
                         {k.kategori}
@@ -1031,7 +1519,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               </div>
             </div>
           )}
-        </motion.div>
+        </motion.div> */}
       </div>
 
       <div className="card rounded-[32px] p-5 sm:p-6">

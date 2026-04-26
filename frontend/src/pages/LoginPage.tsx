@@ -46,12 +46,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(76,175,80,0.16),transparent_28%),linear-gradient(180deg,#f5f8f4_0%,#edf2ee_100%)]">
+    <div className="login-shell min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(76,175,80,0.16),transparent_28%),linear-gradient(180deg,#f5f8f4_0%,#edf2ee_100%)]">
       <div className="grid min-h-screen w-full overflow-hidden lg:grid-cols-[1.02fr_0.98fr]">
         <motion.div
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
-          className="relative hidden overflow-hidden bg-gradient-to-br from-forest-950 via-forest-900 to-forest-700 p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16"
+          className="login-hero relative hidden overflow-hidden bg-linear-to-br from-forest-950 via-forest-900 to-forest-700 p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(165,214,167,0.24),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_30%)]" />
 
@@ -84,7 +84,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-[560px] rounded-[34px] border border-white/70 bg-white/84 p-7 shadow-[0_26px_72px_rgba(36,49,39,0.12)] backdrop-blur-2xl sm:p-9"
+            className="login-card w-full max-w-140 rounded-4xl border border-white/70 bg-white/84 p-7 shadow-[0_26px_72px_rgba(36,49,39,0.12)] backdrop-blur-2xl sm:p-9"
           >
             <div className="mb-8">
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[18px] bg-forest-50 text-forest-800">
@@ -161,7 +161,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               </button>
             </form>
 
-            <div className="mt-7 rounded-[24px] border border-forest-100 bg-forest-25 px-4 py-4">
+            <div className="mt-7 rounded-3xl border border-forest-100 bg-forest-25 px-4 py-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-800/80">
                 Default Access
               </p>
