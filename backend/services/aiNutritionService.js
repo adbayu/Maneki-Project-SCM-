@@ -34,17 +34,57 @@ function extractJsonFromText(text) {
  */
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { retryWithBackoff, isRetryableError } = require("../utils/retryHelper");
+const { retryWithBackoff } = require("../utils/retryHelper");
 
-// Standar AKG (Angka Kecukupan Gizi) per porsi untuk makan siang
-const STANDAR_GIZI = {
-  kalori: { min: 300, max: 700, unit: "kkal", label: "Kalori" },
-  protein: { min: 15, max: 40, unit: "g", label: "Protein" },
-  lemak: { min: 10, max: 25, unit: "g", label: "Lemak" },
-  karbohidrat: { min: 40, max: 80, unit: "g", label: "Karbohidrat" },
-  serat: { min: 3, max: 10, unit: "g", label: "Serat" },
-  gula: { min: 0, max: 15, unit: "g", label: "Gula" },
+// Standar AKG per porsi dipisahkan berdasarkan profil menu
+const STANDAR_GIZI_PROFILES = {
+  makanan: {
+    kalori: { min: 300, max: 700, unit: "kkal", label: "Kalori" },
+    protein: { min: 15, max: 40, unit: "g", label: "Protein" },
+    lemak: { min: 10, max: 25, unit: "g", label: "Lemak" },
+    karbohidrat: { min: 40, max: 80, unit: "g", label: "Karbohidrat" },
+    serat: { min: 3, max: 10, unit: "g", label: "Serat" },
+    gula: { min: 0, max: 15, unit: "g", label: "Gula" },
+  },
+  minuman: {
+    kalori: { min: 80, max: 220, unit: "kkal", label: "Kalori" },
+    protein: { min: 2, max: 12, unit: "g", label: "Protein" },
+    lemak: { min: 0, max: 8, unit: "g", label: "Lemak" },
+    karbohidrat: { min: 8, max: 30, unit: "g", label: "Karbohidrat" },
+    serat: { min: 0, max: 5, unit: "g", label: "Serat" },
+    gula: { min: 0, max: 10, unit: "g", label: "Gula" },
+  },
 };
+
+// Backward compatibility untuk import lama
+const STANDAR_GIZI = STANDAR_GIZI_PROFILES.makanan;
+
+function detectNutritionProfile(namaMenu, menuContext = {}) {
+  const explicitType = String(menuContext.menuType || "").toLowerCase();
+  const kategori = String(menuContext.kategori || "").toLowerCase();
+  const text = `${namaMenu || ""} ${menuContext.deskripsi || ""}`.toLowerCase();
+
+  if (explicitType === "minuman") return "minuman";
+
+  const drinkFlags = [
+    "minuman",
+    "drink",
+    "jus",
+    "susu",
+    "teh",
+    "kopi",
+    "smoothie",
+    "sirup",
+    "es ",
+    "wedang",
+    "infused",
+  ];
+
+  if (drinkFlags.some((flag) => kategori.includes(flag))) return "minuman";
+  if (drinkFlags.some((flag) => text.includes(flag))) return "minuman";
+
+  return "makanan";
+}
 
 // ============================================================
 // STEP 1: Hitung skor gizi secara matematis (deterministik)
@@ -53,15 +93,16 @@ const STANDAR_GIZI = {
 /**
  * Menghitung analisis per-nutrisi dan skor keseluruhan secara matematis.
  * @param {Object} nutrition
+ * @param {Object} standarGizi
  * @returns {{ analysis, overallScore, overallStatus, nutrientIssues }}
  */
-function computeNutrientAnalysis(nutrition) {
+function computeNutrientAnalysis(nutrition, standarGizi) {
   const analysis = {};
   const nutrientIssues = [];
   let totalScore = 0;
   let maxScore = 0;
 
-  for (const [nutrient, standard] of Object.entries(STANDAR_GIZI)) {
+  for (const [nutrient, standard] of Object.entries(standarGizi)) {
     const value = Number(nutrition[nutrient] || 0);
     let status = "optimal";
     let score = 100;
@@ -133,7 +174,16 @@ function buildPrompt(
   nutrientIssues,
   overallScore,
   overallStatus,
+  standarGizi,
+  nutritionProfile,
 ) {
+  const nutritionLines = Object.entries(standarGizi)
+    .map(
+      ([nutrient, standard]) =>
+        `  - ${standard.label.padEnd(11, " ")} : ${nutrition[nutrient] || 0} ${standard.unit} (standar: ${standard.min}–${standard.max} ${standard.unit})`,
+    )
+    .join("\n");
+
   const issuesText =
     nutrientIssues.length > 0
       ? nutrientIssues
@@ -149,15 +199,11 @@ function buildPrompt(
 DATA MENU
 ---------
 Nama Menu   : "${namaMenu}"
+Profil Menu : ${nutritionProfile === "minuman" ? "Minuman" : "Makanan"}
 Skor Gizi   : ${overallScore}/100 (${overallStatus})
 
 Nilai Gizi per Porsi:
-  - Kalori      : ${nutrition.kalori || 0} kkal  (standar: 300–700 kkal)
-  - Protein     : ${nutrition.protein || 0} g     (standar: 15–40 g)
-  - Lemak       : ${nutrition.lemak || 0} g     (standar: 10–25 g)
-  - Karbohidrat : ${nutrition.karbohidrat || 0} g     (standar: 40–80 g)
-  - Serat       : ${nutrition.serat || 0} g     (standar: 3–10 g)
-  - Gula        : ${nutrition.gula || 0} g     (standar: 0–15 g)
+${nutritionLines}
 
 Masalah Gizi yang Terdeteksi:
 ${issuesText}
@@ -200,6 +246,8 @@ async function callGeminiAPI(
   nutrientIssues,
   overallScore,
   overallStatus,
+  standarGizi,
+  nutritionProfile,
 ) {
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -220,6 +268,8 @@ async function callGeminiAPI(
     nutrientIssues,
     overallScore,
     overallStatus,
+    standarGizi,
+    nutritionProfile,
   );
 
   // Hanya 1 percobaan, tanpa retry
@@ -302,40 +352,79 @@ async function callGeminiAPI(
 // ============================================================
 
 const FALLBACK_RULES = {
-  Kalori: {
-    rendah:
-      "Kalori terlalu rendah. Tambahkan lauk pauk bergizi atau sumber kalori sehat seperti nasi merah atau ubi.",
-    berlebih:
-      "Kalori terlalu tinggi. Kurangi porsi nasi atau ganti bahan tinggi kalori dengan sayuran segar.",
+  makanan: {
+    Kalori: {
+      rendah:
+        "Kalori terlalu rendah. Tambahkan lauk pauk bergizi atau sumber kalori sehat seperti nasi merah atau ubi.",
+      berlebih:
+        "Kalori terlalu tinggi. Kurangi porsi nasi atau ganti bahan tinggi kalori dengan sayuran segar.",
+    },
+    Protein: {
+      rendah:
+        "Protein terlalu rendah. Tambahkan tempe, tahu, ikan, atau telur rebus sebagai sumber protein terjangkau.",
+      berlebih:
+        "Protein berlebih. Seimbangkan dengan memperbanyak sayuran dan mengurangi porsi lauk hewani.",
+    },
+    Lemak: {
+      rendah:
+        "Lemak terlalu rendah. Tambahkan sedikit minyak kelapa atau alpukat sebagai sumber lemak sehat.",
+      berlebih:
+        "Lemak terlalu tinggi. Kurangi penggunaan santan atau minyak goreng; coba metode kukus atau rebus.",
+    },
+    Karbohidrat: {
+      rendah:
+        "Karbohidrat rendah. Tambahkan nasi, jagung, singkong, atau kentang untuk mencukupi kebutuhan energi.",
+      berlebih:
+        "Karbohidrat berlebih. Kurangi porsi nasi dan ganti sebagian dengan sayuran hijau yang kaya serat.",
+    },
+    Serat: {
+      rendah:
+        "Serat sangat rendah. Tambahkan sayuran seperti bayam, kangkung, atau kacang panjang untuk meningkatkan serat.",
+      berlebih:
+        "Kandungan serat sangat tinggi dan mendukung kesehatan pencernaan. Pertahankan!",
+    },
+    Gula: {
+      rendah: null,
+      berlebih:
+        "Kandungan gula terlalu tinggi. Kurangi penggunaan gula pasir dan kecap manis; manfaatkan rempah alami sebagai pengganti rasa.",
+    },
   },
-  Protein: {
-    rendah:
-      "Protein terlalu rendah. Tambahkan tempe, tahu, ikan, atau telur rebus sebagai sumber protein terjangkau.",
-    berlebih:
-      "Protein berlebih. Seimbangkan dengan memperbanyak sayuran dan mengurangi porsi lauk hewani.",
-  },
-  Lemak: {
-    rendah:
-      "Lemak terlalu rendah. Tambahkan sedikit minyak kelapa atau alpukat sebagai sumber lemak sehat.",
-    berlebih:
-      "Lemak terlalu tinggi. Kurangi penggunaan santan atau minyak goreng; coba metode kukus atau rebus.",
-  },
-  Karbohidrat: {
-    rendah:
-      "Karbohidrat rendah. Tambahkan nasi, jagung, singkong, atau kentang untuk mencukupi kebutuhan energi.",
-    berlebih:
-      "Karbohidrat berlebih. Kurangi porsi nasi dan ganti sebagian dengan sayuran hijau yang kaya serat.",
-  },
-  Serat: {
-    rendah:
-      "Serat sangat rendah. Tambahkan sayuran seperti bayam, kangkung, atau kacang panjang untuk meningkatkan serat.",
-    berlebih:
-      "Kandungan serat sangat tinggi dan mendukung kesehatan pencernaan. Pertahankan!",
-  },
-  Gula: {
-    rendah: null,
-    berlebih:
-      "Kandungan gula terlalu tinggi. Kurangi penggunaan gula pasir dan kecap manis; manfaatkan rempah alami sebagai pengganti rasa.",
+  minuman: {
+    Kalori: {
+      rendah:
+        "Kalori minuman terlalu rendah. Tambahkan bahan bernutrisi seperti susu UHT, oat, atau pisang agar energi lebih cukup.",
+      berlebih:
+        "Kalori minuman terlalu tinggi. Kurangi pemanis dan bahan berkalori padat, lalu tingkatkan proporsi air atau es batu.",
+    },
+    Protein: {
+      rendah:
+        "Protein minuman rendah. Tambahkan susu, yoghurt plain, atau kedelai untuk meningkatkan kandungan protein.",
+      berlebih:
+        "Protein minuman terlalu tinggi untuk porsi ini. Seimbangkan dengan mengurangi konsentrat protein dan menambah cairan.",
+    },
+    Lemak: {
+      rendah:
+        "Lemak minuman sangat rendah. Jika diperlukan, tambahkan sedikit lemak sehat dari susu atau santan encer.",
+      berlebih:
+        "Lemak minuman tinggi. Kurangi santan kental atau krimer, gunakan susu rendah lemak sebagai pengganti.",
+    },
+    Karbohidrat: {
+      rendah:
+        "Karbohidrat minuman rendah. Tambahkan sumber karbohidrat alami seperti buah matang atau sedikit madu.",
+      berlebih:
+        "Karbohidrat minuman terlalu tinggi. Kurangi sirup/gula tambahan dan gunakan buah utuh secukupnya.",
+    },
+    Serat: {
+      rendah:
+        "Serat minuman rendah. Pertimbangkan menambah buah utuh (bukan hanya jus) seperti pisang, alpukat, atau pepaya.",
+      berlebih:
+        "Serat minuman tinggi. Pastikan tekstur tetap nyaman diminum dan sesuaikan dengan target penerima.",
+    },
+    Gula: {
+      rendah: null,
+      berlebih:
+        "Gula minuman terlalu tinggi. Kurangi gula pasir/sirup dan prioritaskan rasa manis alami dari buah.",
+    },
   },
 };
 
@@ -344,11 +433,14 @@ function getRuleBasedRecommendations(
   nutrientIssues,
   overallScore,
   overallStatus,
+  nutritionProfile,
 ) {
   const recommendations = [];
+  const rulesByProfile =
+    FALLBACK_RULES[nutritionProfile] || FALLBACK_RULES.makanan;
 
   for (const issue of nutrientIssues) {
-    const rule = FALLBACK_RULES[issue.label];
+    const rule = rulesByProfile[issue.label];
     if (!rule) continue;
 
     const pesan = rule[issue.status];
@@ -375,10 +467,10 @@ function getRuleBasedRecommendations(
 
   const message =
     overallScore >= 75
-      ? `Menu "${namaMenu}" memiliki komposisi gizi yang baik dan seimbang.`
+      ? `${nutritionProfile === "minuman" ? "Minuman" : "Menu"} "${namaMenu}" memiliki komposisi gizi yang baik dan seimbang.`
       : overallScore >= 50
-        ? `Menu "${namaMenu}" memiliki komposisi gizi yang cukup, namun masih bisa ditingkatkan.`
-        : `Menu "${namaMenu}" memerlukan perbaikan signifikan pada komposisi gizinya.`;
+        ? `${nutritionProfile === "minuman" ? "Minuman" : "Menu"} "${namaMenu}" memiliki komposisi gizi yang cukup, namun masih bisa ditingkatkan.`
+        : `${nutritionProfile === "minuman" ? "Minuman" : "Menu"} "${namaMenu}" memerlukan perbaikan signifikan pada komposisi gizinya.`;
 
   return { message, recommendations };
 }
@@ -393,11 +485,15 @@ function getRuleBasedRecommendations(
  *
  * @param {Object} nutrition - Data gizi { kalori, protein, lemak, karbohidrat, serat, gula }
  * @param {string} namaMenu  - Nama menu untuk konteks analisis
+ * @param {Object} menuContext - Metadata opsional { kategori, deskripsi, menuType }
  * @returns {Promise<Object>} Hasil analisis lengkap
  */
-async function analyzeNutrition(nutrition, namaMenu) {
+async function analyzeNutrition(nutrition, namaMenu, menuContext = {}) {
+  const nutritionProfile = detectNutritionProfile(namaMenu, menuContext);
+  const standarGizi = STANDAR_GIZI_PROFILES[nutritionProfile];
+
   const { analysis, overallScore, overallStatus, nutrientIssues } =
-    computeNutrientAnalysis(nutrition);
+    computeNutrientAnalysis(nutrition, standarGizi);
 
   let overallMessage = "";
   let recommendations = [];
@@ -411,6 +507,8 @@ async function analyzeNutrition(nutrition, namaMenu) {
       nutrientIssues,
       overallScore,
       overallStatus,
+      standarGizi,
+      nutritionProfile,
     );
     overallMessage = aiResult.message;
     recommendations = aiResult.recommendations;
@@ -471,6 +569,7 @@ async function analyzeNutrition(nutrition, namaMenu) {
       nutrientIssues,
       overallScore,
       overallStatus,
+      nutritionProfile,
     );
     overallMessage = fallback.message;
     recommendations = fallback.recommendations;
@@ -485,7 +584,8 @@ async function analyzeNutrition(nutrition, namaMenu) {
     pesan: overallMessage,
     detail_analisis: analysis,
     rekomendasi: recommendations,
-    standar_referensi: `AKG per porsi makan (Kemenkes RI) — Powered by ${poweredBy}`,
+    standar_referensi: `AKG per porsi ${nutritionProfile} (Kemenkes RI) — Powered by ${poweredBy}`,
+    nutrition_profile: nutritionProfile,
     ai_engine: aiEngine,
     analyzed_at: new Date().toISOString(),
   };
@@ -497,6 +597,7 @@ async function analyzeNutrition(nutrition, namaMenu) {
  * @returns {Object}
  */
 function getNutritionSummary(nutrition) {
+  const profile = detectNutritionProfile("", {});
   return {
     kalori: Number(nutrition.kalori || 0),
     protein: Number(nutrition.protein || 0),
@@ -504,17 +605,21 @@ function getNutritionSummary(nutrition) {
     karbohidrat: Number(nutrition.karbohidrat || 0),
     serat: Number(nutrition.serat || 0),
     gula: Number(nutrition.gula || 0),
-    is_balanced: isBalanced(nutrition),
+    nutrition_profile: profile,
+    is_balanced: isBalanced(nutrition, profile),
   };
 }
 
 /**
  * Memeriksa apakah seluruh nilai gizi menu berada dalam standar.
  * @param {Object} nutrition
+ * @param {string} nutritionProfile
  * @returns {boolean}
  */
-function isBalanced(nutrition) {
-  for (const [nutrient, standard] of Object.entries(STANDAR_GIZI)) {
+function isBalanced(nutrition, nutritionProfile = "makanan") {
+  const standarGizi =
+    STANDAR_GIZI_PROFILES[nutritionProfile] || STANDAR_GIZI_PROFILES.makanan;
+  for (const [nutrient, standard] of Object.entries(standarGizi)) {
     const value = Number(nutrition[nutrient] || 0);
     if (value < standard.min || value > standard.max) return false;
   }

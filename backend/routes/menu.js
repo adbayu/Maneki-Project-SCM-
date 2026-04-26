@@ -304,7 +304,10 @@ router.post("/:id/analyze", async (req, res) => {
     const nutrition = nutritionRows[0];
 
     // Run AI analysis (async — powered by Google Gemini AI)
-    const analysis = await aiService.analyzeNutrition(nutrition, menu.nama);
+    const analysis = await aiService.analyzeNutrition(nutrition, menu.nama, {
+      kategori: menu.kategori,
+      deskripsi: menu.deskripsi,
+    });
 
     // Save recommendations to database
     for (const rec of analysis.rekomendasi) {
