@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -46,12 +46,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen px-4 py-4 sm:px-6 sm:py-6">
-      <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-[1640px] overflow-hidden rounded-[36px] border border-white/60 bg-white/55 shadow-[0_30px_80px_rgba(36,49,39,0.12)] backdrop-blur-xl lg:grid-cols-[1.08fr_0.92fr]">
+    <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(76,175,80,0.16),transparent_28%),linear-gradient(180deg,#f5f8f4_0%,#edf2ee_100%)]">
+      <div className="grid min-h-screen w-full overflow-hidden lg:grid-cols-[1.02fr_0.98fr]">
         <motion.div
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
-          className="relative hidden overflow-hidden bg-gradient-to-br from-forest-950 via-forest-900 to-forest-700 p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14"
+          className="relative hidden overflow-hidden bg-gradient-to-br from-forest-950 via-forest-900 to-forest-700 p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(165,214,167,0.24),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_30%)]" />
 
@@ -73,42 +73,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               Enterprise-ready workspace
             </div>
             <h1 className="mt-6 text-5xl font-bold leading-[1.02] tracking-[-0.04em] text-white">
-              Visual baru yang lebih tenang, rapi, dan siap untuk operasional
-              bisnis.
+              Kelola menu MBG dan pantau analitik gizi
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-8 text-white/72">
-              Kelola menu MBG, pantau analitik gizi, dan susun workflow tim
-              dalam antarmuka yang lebih bersih dan profesional.
-            </p>
           </div>
 
-          <div className="relative z-10 grid grid-cols-2 gap-4">
-            {[
-              { label: "Dashboard siap kerja", value: "Clean SaaS UI" },
-              { label: "Tema utama", value: "White + Green" },
-              { label: "Tata letak", value: "Lega & fokus" },
-              { label: "Akses", value: "Satu akun internal" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-[24px] border border-white/10 bg-white/8 p-4 backdrop-blur-sm"
-              >
-                <p className="text-xs uppercase tracking-[0.16em] text-white/50">
-                  {item.label}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-white">
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
+          <div className="relative z-10 grid grid-cols-2 gap-4"></div>
         </motion.div>
 
-        <div className="flex items-center justify-center bg-white/35 p-5 sm:p-8 lg:p-12">
+        <div className="flex min-h-screen items-center justify-center bg-white/20 p-6 sm:p-8 lg:p-12">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card w-full max-w-[520px] rounded-[32px] p-7 sm:p-9"
+            className="w-full max-w-[560px] rounded-[34px] border border-white/70 bg-white/84 p-7 shadow-[0_26px_72px_rgba(36,49,39,0.12)] backdrop-blur-2xl sm:p-9"
           >
             <div className="mb-8">
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[18px] bg-forest-50 text-forest-800">

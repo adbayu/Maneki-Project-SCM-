@@ -294,7 +294,7 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
           Memuat menu...
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-2">
           {filtered.map((menu) => {
             const protein = Number(menu.protein || 0);
             const karbo = Number(menu.karbohidrat || 0);

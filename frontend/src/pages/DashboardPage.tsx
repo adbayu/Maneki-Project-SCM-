@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   Activity,
   ArrowRight,
+  CalendarDays,
   ChefHat,
   Gauge,
   GlassWater,
@@ -534,6 +535,13 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
     month: "long",
     year: "numeric",
   });
+  const todayDateNumber = new Date().toLocaleDateString("id-ID", {
+    day: "2-digit",
+  });
+  const todayMonthYear = new Date().toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
 
   const summaryWidgets: SummaryWidget[] = useMemo(() => {
     if (!stats) return [];
@@ -623,7 +631,11 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
 
     document.body.appendChild(ghost);
     dragGhostRef.current = ghost;
-    e.dataTransfer.setDragImage(ghost, 26, 26);
+    e.dataTransfer.setDragImage(
+      ghost,
+      Math.max(18, e.clientX - rect.left),
+      Math.max(18, e.clientY - rect.top),
+    );
   };
 
   const handleCardDragEnd = () => {
@@ -647,6 +659,25 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             {today}. Pantau menu, evaluasi nutrisi, dan susun jadwal mingguan
             dalam satu workspace yang lebih lega dan fokus.
           </p>
+        </div>
+        <div className="card min-w-[220px] rounded-[30px] p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                Tanggal Hari Ini
+              </p>
+              <p className="mt-2 text-5xl font-black leading-none text-forest-900">
+                {todayDateNumber}
+              </p>
+              <p className="mt-2 text-sm font-semibold text-ink-700">
+                {todayMonthYear}
+              </p>
+              <p className="mt-1 text-xs text-ink-400">{today}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-forest-50 text-forest-800">
+              <CalendarDays className="h-5 w-5" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -709,37 +740,48 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="card p-6"
+          className="card rounded-[32px] p-6"
         >
-          <h2 className="mb-2 text-base font-bold text-gray-800">
-            Monitor Piringku vs AKG 2019
-          </h2>
-          <p className="mb-3 text-xs text-gray-400">
-            Pilih menu dengan dropdown atau seret keseluruhan kartu menu ke area
-            piringku.
-          </p>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                Personal Plate Monitor
+              </p>
+              <h2 className="mt-2 text-lg font-bold text-ink-700">
+                Monitor Piringku vs AKG 2019
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-ink-400">
+                Pilih menu atau seret kartu dari daftar bawah ke area piringku.
+              </p>
+            </div>
+            <div className="rounded-[22px] bg-forest-50 px-4 py-3 text-right">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/70">
+                Target
+              </p>
+              <p className="mt-1 text-sm font-semibold text-forest-900">
+                {STANDAR[kelompok].label}
+              </p>
+            </div>
+          </div>
 
-          <div className="mb-3 flex gap-1 rounded-xl bg-forest-50 p-1">
+          <div className="pill-toggle mb-4">
             {(Object.keys(STANDAR) as Kelompok[]).map((k) => (
               <button
                 key={k}
                 onClick={() => setKelompok(k)}
-                className={`flex-1 rounded-lg py-1.5 text-[10px] font-semibold transition-all ${
-                  kelompok === k
-                    ? "bg-forest-900 text-white shadow-sm"
-                    : "text-gray-600 hover:bg-white/60"
-                }`}
+                data-active={kelompok === k}
+                className="flex-1"
               >
                 {STANDAR[k].label}
               </button>
             ))}
           </div>
 
-          <div className="mb-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
             <select
               value={selectedMenuId || ""}
               onChange={(e) => setSelectedMenuId(Number(e.target.value))}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              className="px-4 py-3 text-sm"
             >
               {menus.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -749,7 +791,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             </select>
             <button
               onClick={() => selectedMenuId && addMenu(selectedMenuId)}
-              className="rounded-xl bg-forest-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-forest-800"
+              className="btn-primary px-4 py-3 text-sm"
             >
               Tambah ke Piringku
             </button>
@@ -762,14 +804,14 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               const id = Number(e.dataTransfer.getData("menu-id"));
               if (id) addMenu(id);
             }}
-            className="mb-4 flex min-h-12 flex-wrap gap-2 rounded-xl border border-dashed border-forest-300 bg-linear-to-r from-forest-50 to-white p-3"
+            className="mb-5 flex min-h-16 flex-wrap gap-2 rounded-[24px] border border-dashed border-forest-300 bg-[linear-gradient(180deg,#f5faf4_0%,#ffffff_100%)] p-4"
           >
             {piringkuMenus.map((m) => {
               const thumbUrl = resolveMenuImageUrl(m.gambar_url);
               return (
                 <div
                   key={m.id}
-                  className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] shadow-sm"
+                  className="flex items-center gap-2 rounded-[18px] border border-ink-100 bg-white px-3 py-2 text-[11px] shadow-sm"
                 >
                   {thumbUrl ? (
                     <img
@@ -801,13 +843,13 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-[24px] border border-ink-100 bg-white/75 p-4">
               {rows.map((r) => {
                 const pct = Math.min(100, Math.round((r.val / r.target) * 100));
                 return (
-                  <div key={r.label} className="mb-2.5">
-                    <div className="mb-1 flex justify-between text-[11px] text-gray-600">
+                  <div key={r.label} className="mb-3">
+                    <div className="mb-1.5 flex justify-between text-[11px] text-gray-600">
                       <span className="font-medium">{r.label}</span>
                       <span className="font-semibold">
                         {Math.round(r.val)}/{r.target} {r.unit}
@@ -826,49 +868,57 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                 );
               })}
             </div>
-            <div className="flex items-center gap-3">
-              <svg viewBox="0 0 42 42" className="h-24 w-24">
-                {(() => {
-                  let start = 0;
-                  return slices.map((s) => {
+            <div className="rounded-[24px] border border-ink-100 bg-[linear-gradient(180deg,#fcfdfc_0%,#f2f6f2_100%)] p-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                Komposisi Makro
+              </p>
+              <div className="mt-4 flex items-center gap-4">
+                <svg viewBox="0 0 42 42" className="h-28 w-28">
+                  {(() => {
+                    let start = 0;
+                    return slices.map((s) => {
+                      const pct =
+                        macroTotal > 0 ? (s.value / macroTotal) * 100 : 0;
+                      const node = (
+                        <circle
+                          key={s.key}
+                          cx="21"
+                          cy="21"
+                          r="15.915"
+                          fill="transparent"
+                          stroke={s.color}
+                          strokeWidth="7"
+                          strokeDasharray={`${pct} ${100 - pct}`}
+                          strokeDashoffset={-start}
+                        />
+                      );
+                      start += pct;
+                      return node;
+                    });
+                  })()}
+                </svg>
+                <div>
+                  {slices.map((s) => {
                     const pct =
-                      macroTotal > 0 ? (s.value / macroTotal) * 100 : 0;
-                    const node = (
-                      <circle
+                      macroTotal > 0
+                        ? Math.round((s.value / macroTotal) * 100)
+                        : 0;
+                    return (
+                      <div
                         key={s.key}
-                        cx="21"
-                        cy="21"
-                        r="15.915"
-                        fill="transparent"
-                        stroke={s.color}
-                        strokeWidth="7"
-                        strokeDasharray={`${pct} ${100 - pct}`}
-                        strokeDashoffset={-start}
-                      />
+                        className="mb-1 flex items-center gap-1.5"
+                      >
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: s.color }}
+                        />
+                        <span className="text-[11px] font-medium text-gray-600">
+                          {s.label}: {pct}%
+                        </span>
+                      </div>
                     );
-                    start += pct;
-                    return node;
-                  });
-                })()}
-              </svg>
-              <div>
-                {slices.map((s) => {
-                  const pct =
-                    macroTotal > 0
-                      ? Math.round((s.value / macroTotal) * 100)
-                      : 0;
-                  return (
-                    <div key={s.key} className="mb-1 flex items-center gap-1.5">
-                      <span
-                        className="h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: s.color }}
-                      />
-                      <span className="text-[11px] font-medium text-gray-600">
-                        {s.label}: {pct}%
-                      </span>
-                    </div>
-                  );
-                })}
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -878,17 +928,20 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="card p-6"
+          className="card rounded-[32px] p-6"
         >
           <div className="mb-4 flex items-center gap-2">
             <div className="rounded-2xl bg-forest-50 p-2.5">
               <Gauge className="h-5 w-5 text-forest-800" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-gray-800">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                Average Nutrition
+              </p>
+              <h2 className="text-lg font-bold text-gray-800">
                 Rata-rata Nutrisi
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-sm text-gray-400">
                 Dari seluruh menu yang tersedia
               </p>
             </div>
@@ -981,33 +1034,33 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         </motion.div>
       </div>
 
-      <div className="card p-5">
-        <div className="mb-4 rounded-xl border border-forest-200/70 bg-linear-to-r from-forest-50 to-white p-3">
-          <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+      <div className="card rounded-[32px] p-5 sm:p-6">
+        <div className="mb-5 rounded-[28px] border border-forest-200/70 bg-[linear-gradient(180deg,#f7fbf6_0%,#ffffff_100%)] p-4">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-forest-700/80">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/80">
                 Widget Mingguan
               </p>
-              <h3 className="text-base font-bold text-gray-800">
+              <h3 className="mt-2 text-lg font-bold text-gray-800">
                 Susun Jadwal Menu Senin - Minggu
               </h3>
-              <p className="text-[11px] text-gray-500">
+              <p className="mt-1 text-sm leading-6 text-gray-500">
                 Seret keseluruhan kartu menu ke slot Makanan atau Minuman pada
                 hari yang diinginkan.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-forest-700 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-forest-100 bg-white px-4 py-2 text-xs font-semibold text-forest-700 shadow-sm">
                 {totalScheduledCount} menu terjadwal
               </span>
-              <button className="inline-flex items-center gap-1 rounded-full border border-forest-200 bg-white px-3 py-1 text-xs font-semibold text-forest-700 hover:bg-forest-50">
+              <button className="inline-flex items-center gap-1 rounded-full border border-forest-200 bg-white px-4 py-2 text-xs font-semibold text-forest-700 hover:bg-forest-50">
                 <RefreshCw className="h-3.5 w-3.5" /> Minggu Ini
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-7">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-7">
             {weekDays.map((day) => {
               const dayPlan = normalizeDayPlan(weeklyPlan[day.dateKey]);
               const totalDayItems =
@@ -1017,30 +1070,28 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               return (
                 <div
                   key={day.dateKey}
-                  className={`min-h-30 rounded-xl border p-2.5 transition-all ${
+                  className={`min-h-[250px] rounded-[24px] border p-3 transition-all ${
                     day.isToday
-                      ? "border-forest-500 bg-white shadow-sm"
+                      ? "border-forest-500 bg-white shadow-[0_18px_32px_rgba(46,125,50,0.10)]"
                       : isFilled
-                        ? "border-forest-200 bg-forest-50/30"
-                        : "border-gray-200 bg-white"
+                        ? "border-forest-200 bg-forest-50/35"
+                        : "border-gray-200 bg-white/90"
                   }`}
                 >
-                  <div className="mb-2 flex items-start justify-between">
+                  <div className="mb-3 flex items-start justify-between">
                     <div>
                       <p
-                        className={`text-[11px] font-bold ${
+                        className={`text-sm font-bold ${
                           day.isToday ? "text-forest-800" : "text-gray-700"
                         }`}
                       >
                         {day.dayLabel}
                       </p>
-                      <p className="text-[10px] text-gray-400">
-                        {day.dateLabel}
-                      </p>
+                      <p className="text-xs text-gray-400">{day.dateLabel}</p>
                     </div>
 
                     {day.isToday && (
-                      <span className="rounded-full bg-forest-100 px-1.5 py-0.5 text-[9px] font-bold text-forest-700">
+                      <span className="rounded-full bg-forest-100 px-2 py-1 text-[10px] font-bold text-forest-700">
                         Hari Ini
                       </span>
                     )}
@@ -1091,7 +1142,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                             }
                             setDragOverTarget(null);
                           }}
-                          className={`rounded-lg border px-2 py-2 transition-all ${slot.sectionClass} ${
+                          className={`rounded-[18px] border px-2.5 py-2.5 transition-all ${slot.sectionClass} ${
                             isDropTarget ? "ring-2 ring-forest-300" : ""
                           }`}
                         >
@@ -1118,7 +1169,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                                 return (
                                   <div
                                     key={`${day.dateKey}-${slot.type}-${menu.id}`}
-                                    className="rounded-md border border-gray-200 bg-white p-1.5 shadow-sm"
+                                    className="rounded-[14px] border border-gray-200 bg-white p-2 shadow-sm"
                                   >
                                     <div className="mb-1 flex items-center gap-1.5">
                                       {thumbUrl ? (
@@ -1176,7 +1227,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                   {isFilled && (
                     <button
                       onClick={() => clearDayPlan(day.dateKey)}
-                      className="mt-2 w-full rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-bold text-red-600 hover:bg-red-100"
+                      className="mt-3 w-full rounded-[16px] border border-red-200 bg-red-50 px-3 py-2 text-[10px] font-bold text-red-600 hover:bg-red-100"
                     >
                       Hapus Semua Menu Hari Ini
                     </button>
@@ -1206,11 +1257,11 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari menu untuk drag ke piringku atau jadwal minggu"
-              className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              className="flex-1 px-4 py-3 text-sm"
             />
           </div>
 
-          <div className="flex gap-1 rounded-xl bg-forest-50 p-1">
+          <div className="pill-toggle">
             {[
               { key: "all" as const, label: "Semua" },
               { key: "makanan" as const, label: "Makanan" },
@@ -1219,11 +1270,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               <button
                 key={tab.key}
                 onClick={() => setMenuTypeFilter(tab.key)}
-                className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all ${
-                  menuTypeFilter === tab.key
-                    ? "bg-forest-900 text-white"
-                    : "text-gray-600 hover:bg-white/70"
-                }`}
+                data-active={menuTypeFilter === tab.key}
               >
                 {tab.label}
               </button>
@@ -1234,7 +1281,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         {loading ? (
           <p className="text-sm text-gray-400">Memuat menu...</p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-3">
             {filtered.map((m) => {
               const protein = Number(m.protein || 0);
               const karbo = Number(m.karbohidrat || 0);
@@ -1252,14 +1299,18 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                   whileHover={{ y: -3 }}
                   draggable
                   onDragStartCapture={(e) =>
-                    handleCardDragStart(e, m.id, menuType)
+                    handleCardDragStart(
+                      e as DragEvent<HTMLDivElement>,
+                      m.id,
+                      menuType,
+                    )
                   }
                   onDragEnd={handleCardDragEnd}
-                  className={`touch-pan-y cursor-grab overflow-hidden rounded-xl border bg-white transition-all active:cursor-grabbing ${
+                  className={`touch-pan-y cursor-grab overflow-hidden rounded-[24px] border bg-white transition-all active:cursor-grabbing ${
                     isOnPlate
                       ? "border-forest-400 shadow-md shadow-forest-100"
                       : "border-gray-200 hover:shadow-md"
-                  } ${draggingMenuId === m.id ? "-rotate-1 scale-[0.99] ring-2 ring-forest-300 opacity-75 shadow-xl" : ""}`}
+                  } ${draggingMenuId === m.id ? "-rotate-1 scale-[0.985] ring-2 ring-forest-300 opacity-80 shadow-xl" : ""}`}
                   style={{ touchAction: "pan-y" }}
                 >
                   <div className="relative h-28 overflow-hidden">
