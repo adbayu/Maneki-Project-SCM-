@@ -1,23 +1,123 @@
-﻿import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Bell, Search, Sparkles } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import MenuCatalogPage from "./pages/MenuCatalogPage";
 import RecipeBuilderPage from "./pages/RecipeBuilderPage";
 import AILabPage from "./pages/AILabPage";
-import FinancialPage from "./pages/FinancialPage";
 import type { PageView, AuthUser } from "./types";
 
 function SmartStockPage() {
   return (
-    <div className="p-8">
-      <div className="card p-12 text-center">
-        <p className="text-4xl mb-4">Stock</p>
-        <h2 className="text-xl font-bold text-gray-700 mb-2">Smart Stock</h2>
-        <p className="text-gray-400 text-sm">Fitur ini akan segera hadir</p>
+    <div className="page-shell">
+      <div className="card p-8 sm:p-10">
+        <div className="surface-muted flex min-h-[320px] flex-col items-center justify-center gap-4 p-8 text-center">
+          <span className="soft-badge">Coming Soon</span>
+          <div>
+            <h2 className="page-title text-[2rem]">Smart Stock</h2>
+            <p className="page-subtitle max-w-xl">
+              Halaman ini tetap dipertahankan, namun tampilannya sudah
+              diselaraskan dengan dashboard baru sambil menunggu fitur stok
+              dirilis.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+const PAGE_META: Record<
+  Exclude<PageView, "financial">,
+  { label: string; description: string }
+> = {
+  dashboard: {
+    label: "Dashboard",
+    description: "Ringkasan operasional menu, status nutrisi, dan rencana mingguan.",
+  },
+  "menu-catalog": {
+    label: "Menu Catalog",
+    description: "Kelola seluruh katalog menu dalam tampilan yang lebih rapi dan profesional.",
+  },
+  "recipe-builder": {
+    label: "Recipe Builder",
+    description: "Form tambah dan edit menu dengan panel kerja yang lebih lega dan fokus.",
+  },
+  "ai-lab": {
+    label: "AI Nutrition Lab",
+    description: "Analitik AI dengan presentasi data yang lebih bersih dan mudah dibaca.",
+  },
+  "smart-stock": {
+    label: "Smart Stock",
+    description: "Placeholder modul stok dengan visual yang tetap konsisten.",
+  },
+};
+
+interface TopbarProps {
+  activePage: PageView;
+  user: AuthUser;
+}
+
+function AppTopbar({ activePage, user }: TopbarProps) {
+  const meta = PAGE_META[activePage as Exclude<PageView, "financial">];
+
+  return (
+    <header className="glass-topbar card sticky top-3 z-20 rounded-[30px] px-4 py-4 sm:px-5 lg:px-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-forest-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-forest-800">
+            <Sparkles className="h-3.5 w-3.5" />
+            Modern MBG Workspace
+          </div>
+          <div>
+            <h1 className="text-[1.55rem] font-bold tracking-[-0.03em] text-ink-700">
+              {meta.label}
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-ink-400">
+              {meta.description}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative min-w-0 flex-1 sm:min-w-[260px]">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <input
+              readOnly
+              value=""
+              placeholder="Cari halaman, menu, atau insight"
+              className="w-full border-white/60 bg-white/88 py-3 pl-11 pr-4 text-sm shadow-sm"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/70 bg-white/90 text-ink-500 shadow-sm transition hover:-translate-y-0.5 hover:text-forest-900"
+              aria-label="Notifikasi"
+            >
+              <Bell className="h-[18px] w-[18px]" />
+            </button>
+
+            <div className="flex items-center gap-3 rounded-[22px] border border-white/70 bg-white/92 px-3 py-2 shadow-sm">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-forest-900 to-forest-700 text-sm font-bold text-white">
+                {(user.nama || user.username).slice(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-ink-700">
+                  {user.nama || user.username}
+                </p>
+                <p className="text-xs uppercase tracking-[0.16em] text-ink-400">
+                  {user.role || "User"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }
 
@@ -48,9 +148,7 @@ export default function App() {
     setActivePage("dashboard");
   };
 
-  if (!user) return <LoginPage onLogin={handleLogin} />;
-
-  const renderPage = () => {
+  const renderedPage = useMemo(() => {
     switch (activePage) {
       case "dashboard":
         return <DashboardPage onNavigate={setActivePage} />;
@@ -62,41 +160,42 @@ export default function App() {
         return <AILabPage />;
       case "smart-stock":
         return <SmartStockPage />;
-      case "financial":
-        return <FinancialPage />;
       default:
         return <DashboardPage onNavigate={setActivePage} />;
     }
-  };
+  }, [activePage]);
+
+  if (!user) return <LoginPage onLogin={handleLogin} />;
 
   return (
-    <div
-      className="flex"
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at 0% 0%, rgba(129,199,132,.25), transparent 30%), linear-gradient(145deg,#f4f9ee 0%,#eff8ec 45%,#f8fbf6 100%)",
-      }}
-    >
-      <Sidebar
-        activePage={activePage}
-        onNavigate={setActivePage}
-        onLogout={handleLogout}
-        user={user}
-      />
-      <main className="flex-1 overflow-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activePage}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-          >
-            {renderPage()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+    <div className="min-h-screen">
+      <div className="mx-auto flex min-h-screen max-w-[1720px] flex-col gap-4 px-3 py-3 sm:px-4 sm:py-4 lg:flex-row lg:gap-5 lg:px-5 lg:py-5">
+        <Sidebar
+          activePage={activePage}
+          onNavigate={setActivePage}
+          onLogout={handleLogout}
+          user={user}
+        />
+
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <AppTopbar activePage={activePage} user={user} />
+
+          <main className="min-w-0 flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activePage}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.24, ease: "easeOut" }}
+                className="min-h-full"
+              >
+                {renderedPage}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

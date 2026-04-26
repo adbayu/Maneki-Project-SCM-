@@ -1,6 +1,14 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Leaf, Lock, User, Eye, EyeOff } from "lucide-react";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Leaf,
+  Lock,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 
 const API = "http://localhost:3002/api/auth";
 
@@ -38,119 +46,155 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div
-      className="min-h-screen grid grid-cols-1 lg:grid-cols-2"
-      style={{
-        background:
-          "linear-gradient(130deg,#f3f8ed 0%, #e8f5e9 45%, #ffffff 100%)",
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="hidden lg:flex flex-col justify-between p-10"
-        style={{
-          background:
-            "linear-gradient(155deg,#1f5f2b 0%, #2e7d32 45%, #74b46f 100%)",
-        }}
-      >
-        <div className="flex items-center gap-3 text-white">
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-            <Leaf className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="font-bold">Maneki SCM</p>
-            <p className="text-xs text-forest-100">Program MBG Indonesia</p>
-          </div>
-        </div>
-        <div className="text-white max-w-sm">
-          <h1 className="text-4xl font-black leading-tight mb-3">
-            Distribusi MBG lebih tepat sasaran.
-          </h1>
-          <p className="text-sm text-forest-100">
-            Pantau menu siswa, balita, dan ibu hamil dalam satu dashboard.
-          </p>
-        </div>
-        <p className="text-xs text-forest-100">© 2026 Maneki SCM</p>
-      </motion.div>
-
-      <div className="flex items-center justify-center p-5">
+    <div className="min-h-screen px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-[1640px] overflow-hidden rounded-[36px] border border-white/60 bg-white/55 shadow-[0_30px_80px_rgba(36,49,39,0.12)] backdrop-blur-xl lg:grid-cols-[1.08fr_0.92fr]">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md card p-8"
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="relative hidden overflow-hidden bg-gradient-to-br from-forest-950 via-forest-900 to-forest-700 p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14"
         >
-          <h2 className="text-2xl font-bold text-gray-800">
-            Masuk ke Maneki SCM
-          </h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Sistem gizi, stok, dan rekomendasi AI MBG
-          </p>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(165,214,167,0.24),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_30%)]" />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <div className="relative mt-1.5">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-200 bg-gray-50"
-                  placeholder="admin"
-                />
-              </div>
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-white/12 ring-1 ring-white/10">
+              <Leaf className="h-5 w-5" />
             </div>
-
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="relative mt-1.5">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type={showPass ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 bg-gray-50"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                >
-                  {showPass ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
+              <p className="text-base font-bold">Maneki SCM</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-white/60">
+                Menu Planning Dashboard
+              </p>
             </div>
+          </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
-                {error}
+          <div className="relative z-10 max-w-xl">
+            <div className="soft-badge border-white/10 bg-white/10 text-white/70">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Enterprise-ready workspace
+            </div>
+            <h1 className="mt-6 text-5xl font-bold leading-[1.02] tracking-[-0.04em] text-white">
+              Visual baru yang lebih tenang, rapi, dan siap untuk operasional
+              bisnis.
+            </h1>
+            <p className="mt-5 max-w-lg text-base leading-8 text-white/72">
+              Kelola menu MBG, pantau analitik gizi, dan susun workflow tim
+              dalam antarmuka yang lebih bersih dan profesional.
+            </p>
+          </div>
+
+          <div className="relative z-10 grid grid-cols-2 gap-4">
+            {[
+              { label: "Dashboard siap kerja", value: "Clean SaaS UI" },
+              { label: "Tema utama", value: "White + Green" },
+              { label: "Tata letak", value: "Lega & fokus" },
+              { label: "Akses", value: "Satu akun internal" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[24px] border border-white/10 bg-white/8 p-4 backdrop-blur-sm"
+              >
+                <p className="text-xs uppercase tracking-[0.16em] text-white/50">
+                  {item.label}
+                </p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {item.value}
+                </p>
               </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full py-3 disabled:opacity-60"
-            >
-              {loading ? "Masuk..." : "Masuk"}
-            </button>
-          </form>
-
-          <p className="text-center text-xs text-gray-400 mt-5">
-            Default: <span className="font-mono">admin / admin123</span>
-          </p>
+            ))}
+          </div>
         </motion.div>
+
+        <div className="flex items-center justify-center bg-white/35 p-5 sm:p-8 lg:p-12">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card w-full max-w-[520px] rounded-[32px] p-7 sm:p-9"
+          >
+            <div className="mb-8">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[18px] bg-forest-50 text-forest-800">
+                <Leaf className="h-5 w-5" />
+              </div>
+              <h2 className="text-[2rem] font-bold tracking-[-0.03em] text-ink-700">
+                Masuk ke Maneki SCM
+              </h2>
+              <p className="mt-2 text-sm leading-7 text-ink-400">
+                Sistem gizi, menu, dan analitik AI MBG dalam satu workspace yang
+                lebih modern.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-ink-500">
+                  Username
+                </label>
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                  <input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    className="w-full py-3.5 pl-11 pr-4 text-sm"
+                    placeholder="admin"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-ink-500">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                  <input
+                    type={showPass ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full py-3.5 pl-11 pr-12 text-sm"
+                    placeholder="Masukkan password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((v) => !v)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-ink-700"
+                    aria-label="Lihat password"
+                  >
+                    {showPass ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="rounded-[20px] border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary flex w-full items-center justify-center gap-2 py-3.5 disabled:opacity-60"
+              >
+                <span>{loading ? "Masuk..." : "Masuk ke Dashboard"}</span>
+                {!loading && <ArrowRight className="h-4 w-4" />}
+              </button>
+            </form>
+
+            <div className="mt-7 rounded-[24px] border border-forest-100 bg-forest-25 px-4 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-800/80">
+                Default Access
+              </p>
+              <p className="mt-2 font-mono text-sm text-ink-500">
+                admin / admin123
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

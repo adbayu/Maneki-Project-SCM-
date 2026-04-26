@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  AlertTriangle,
   Brain,
   CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Loader2,
-  Sparkles,
-  Zap,
-  RefreshCw,
   Clock,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  XCircle,
+  Zap,
 } from "lucide-react";
 import type { AIAnalysisResult } from "../types";
 import { getCachedAnalysis, setCachedAnalysis } from "../utils/menuMeta";
@@ -75,8 +75,6 @@ export default function AIAnalysisPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menuId]);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
   const isGemini = (analysis?.ai_engine ?? "").toLowerCase().includes("gemini");
 
   const formatTime = (iso: string) =>
@@ -86,127 +84,90 @@ export default function AIAnalysisPanel({
       second: "2-digit",
     });
 
-  const getScoreColor = (score: number) => {
-    if (score >= 75) return "text-emerald-400";
-    if (score >= 50) return "text-amber-400";
-    return "text-red-400";
-  };
-
   const getScoreStroke = (score: number) => {
-    if (score >= 75) return "#10b981";
+    if (score >= 75) return "#2e7d32";
     if (score >= 50) return "#f59e0b";
     return "#ef4444";
   };
 
-  const getScoreBarBg = (score: number) => {
-    if (score >= 75) return "bg-emerald-500";
+  const getScoreText = (score: number) => {
+    if (score >= 75) return "text-forest-800";
+    if (score >= 50) return "text-amber-600";
+    return "text-red-600";
+  };
+
+  const getScoreFill = (score: number) => {
+    if (score >= 75) return "bg-forest-700";
     if (score >= 50) return "bg-amber-500";
     return "bg-red-500";
   };
 
-  const getNutrientStatusStyle = (status: string) => {
+  const getStatusChip = (status: string) => {
     switch (status) {
       case "optimal":
-        return {
-          icon: "✓",
-          label: "Optimal",
-          cls: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
-        };
+        return "border-emerald-200 bg-emerald-50 text-emerald-700";
       case "rendah":
-        return {
-          icon: "↓",
-          label: "Rendah",
-          cls: "text-amber-400 bg-amber-500/15 border-amber-500/30",
-        };
+        return "border-amber-200 bg-amber-50 text-amber-700";
       default:
-        return {
-          icon: "↑",
-          label: "Berlebih",
-          cls: "text-red-400 bg-red-500/15 border-red-500/30",
-        };
+        return "border-red-200 bg-red-50 text-red-700";
     }
   };
 
   const getSeverityIcon = (severity: string) => {
-    if (severity === "success")
-      return (
-        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-      );
-    if (severity === "warning")
-      return (
-        <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-      );
-    return <XCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />;
+    if (severity === "success") {
+      return <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />;
+    }
+    if (severity === "warning") {
+      return <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />;
+    }
+    return <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />;
   };
 
   const getSeverityCard = (severity: string) => {
-    if (severity === "success") return "border-emerald-500/20 bg-emerald-500/5";
-    if (severity === "warning") return "border-amber-500/20 bg-amber-500/5";
-    return "border-red-500/20 bg-red-500/5";
+    if (severity === "success") return "border-emerald-100 bg-emerald-50/70";
+    if (severity === "warning") return "border-amber-100 bg-amber-50/70";
+    return "border-red-100 bg-red-50/70";
   };
-
-  const getOverallBadge = (score: number) => {
-    if (score >= 75)
-      return "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-    if (score >= 50)
-      return "bg-amber-500/20 text-amber-400 border border-amber-500/30";
-    return "bg-red-500/20 text-red-400 border border-red-500/30";
-  };
-
-  // ── Loading State ──────────────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-5 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-10">
-        <div className="relative">
-          <div className="w-16 h-16 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-            <Brain className="h-7 w-7 text-violet-400" />
+      <div className="border-t border-ink-100 bg-[linear-gradient(180deg,#fbfcfb_0%,#f4f7f4_100%)] p-8">
+        <div className="surface-muted flex flex-col items-center justify-center gap-4 p-8 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-forest-50 text-forest-800">
+            <Loader2 className="h-7 w-7 animate-spin" />
           </div>
-          <Loader2 className="h-16 w-16 text-violet-500/60 animate-spin absolute inset-0" />
-        </div>
-        <div className="text-center space-y-1">
-          <p className="text-sm font-semibold text-white">
-            Meminta analisis ke Google Gemini AI…
-          </p>
-          <p className="text-xs text-slate-500">
-            Menganalisis komposisi gizi &quot;{menuNama}&quot;
-          </p>
-        </div>
-        {/* Shimmer dots */}
-        <div className="flex items-center gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-violet-500/50 animate-bounce"
-              style={{ animationDelay: `${i * 0.15}s` }}
-            />
-          ))}
+          <div>
+            <p className="text-sm font-semibold text-ink-700">
+              Memproses analisis gizi untuk {menuNama}
+            </p>
+            <p className="mt-1 text-xs text-ink-400">
+              Sistem sedang mengambil insight nutrisi terbaru.
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // ── Error State ────────────────────────────────────────────────────────────
-
   if (error) {
     return (
-      <div className="p-6 bg-slate-900">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3">
-          <XCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-red-300">
-              Gagal menganalisis menu
-            </p>
-            <p className="text-xs text-red-400/70 mt-0.5 leading-relaxed">
-              {error}
-            </p>
-            <button
-              onClick={() => runAnalysis(true)}
-              className="mt-3 flex items-center gap-1.5 text-xs font-bold text-red-400 hover:text-red-300 underline transition-colors"
-            >
-              <RefreshCw className="h-3 w-3" />
-              Coba Lagi
-            </button>
+      <div className="border-t border-ink-100 bg-[linear-gradient(180deg,#fbfcfb_0%,#f4f7f4_100%)] p-6">
+        <div className="rounded-[24px] border border-red-100 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-red-700">
+                Gagal menganalisis menu
+              </p>
+              <p className="mt-1 text-xs leading-6 text-red-600">{error}</p>
+              <button
+                onClick={() => runAnalysis(true)}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Coba lagi
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -215,218 +176,209 @@ export default function AIAnalysisPanel({
 
   if (!analysis || !hasAnalyzed) return null;
 
-  // ── Main Panel ─────────────────────────────────────────────────────────────
+  const circumference = 2 * Math.PI * 42;
+  const scoreDash = `${(analysis.skor_gizi / 100) * circumference} ${circumference}`;
 
   return (
-    <div className="bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      {/* ── HEADER ── */}
-      <div className="px-6 pt-5 pb-4 border-b border-white/5">
-        <div className="flex items-start justify-between gap-4">
-          {/* Left: Icon + Title + Badges */}
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-violet-500/20 rounded-xl border border-violet-500/20 shrink-0">
-              <Brain className="h-5 w-5 text-violet-400" />
+    <div className="border-t border-ink-100 bg-[linear-gradient(180deg,#fcfdfc_0%,#f5f8f5_100%)]">
+      <div className="space-y-6 p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-forest-50 text-forest-800">
+              <Brain className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-bold text-white leading-tight">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-base font-bold text-ink-700">
                   Analisis Gizi AI
                 </h3>
-
-                {/* AI Engine Badge */}
-                {isGemini ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/25">
-                    <Sparkles className="h-2.5 w-2.5" />
-                    Gemini AI
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/25">
-                    <Zap className="h-2.5 w-2.5" />
-                    Rule-Based
-                  </span>
-                )}
-              </div>
-
-              {/* Sub-info: timestamp + reference */}
-              <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
-                <Clock className="h-2.5 w-2.5 shrink-0" />
-                <span>
-                  {formatTime(analysis.analyzed_at)}
-                  &nbsp;·&nbsp;AKG Kemenkes RI
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${
+                    isGemini
+                      ? "bg-forest-100 text-forest-800"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {isGemini ? (
+                    <Sparkles className="h-3 w-3" />
+                  ) : (
+                    <Zap className="h-3 w-3" />
+                  )}
+                  {isGemini ? "Gemini AI" : "Rule Based"}
                 </span>
+              </div>
+              <p className="mt-1 text-sm leading-6 text-ink-400">
+                {analysis.pesan}
               </p>
+              <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-400">
+                <Clock className="h-3.5 w-3.5" />
+                {formatTime(analysis.analyzed_at)}
+              </p>
+              {isFromCache && (
+                <p className="mt-2 text-[11px] font-medium text-forest-700">
+                  Menampilkan hasil analisis tersimpan.
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Right: Refresh Button */}
           <button
             onClick={() => runAnalysis(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 hover:text-white border border-violet-500/30 hover:border-violet-400 hover:bg-violet-500/10 px-3 py-1.5 rounded-lg transition-all shrink-0"
+            className="btn-secondary inline-flex items-center justify-center gap-2 px-4 py-3 text-sm"
           >
-            <RefreshCw className="h-3 w-3" />
-            Analisis Ulang
+            <RefreshCw className="h-4 w-4" />
+            Analisis ulang
           </button>
         </div>
-        {isFromCache && (
-          <p className="mt-2 text-[10px] text-slate-500">
-            Menampilkan hasil analisis tersimpan. Gunakan "Analisis Ulang" untuk
-            memperbarui.
-          </p>
-        )}
-      </div>
 
-      <div className="p-6 space-y-6">
-        {/* ── SCORE + STATUS ── */}
-        <div className="flex flex-col sm:flex-row items-center gap-5 bg-white/3 rounded-2xl p-4 border border-white/5">
-          {/* Circular Score */}
-          <div className="relative w-28 h-28 shrink-0">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r="42"
-                fill="none"
-                stroke="rgba(255,255,255,0.06)"
-                strokeWidth="9"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="42"
-                fill="none"
-                stroke={getScoreStroke(analysis.skor_gizi)}
-                strokeWidth="9"
-                strokeLinecap="round"
-                strokeDasharray={`${(analysis.skor_gizi / 100) * 264} 264`}
-                className="transition-all duration-1000 ease-out"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span
-                className={`text-3xl font-black leading-none ${getScoreColor(analysis.skor_gizi)}`}
-              >
-                {analysis.skor_gizi}
-              </span>
-              <span className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
-                /100
-              </span>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr]">
+          <div className="surface-muted flex flex-col items-center justify-center rounded-[28px] p-6 text-center">
+            <div className="relative h-32 w-32">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  fill="none"
+                  stroke="#e4ebe3"
+                  strokeWidth="8"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  fill="none"
+                  stroke={getScoreStroke(analysis.skor_gizi)}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={scoreDash}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-4xl font-black ${getScoreText(analysis.skor_gizi)}`}>
+                  {analysis.skor_gizi}
+                </span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                  score
+                </span>
+              </div>
             </div>
-          </div>
-
-          {/* Status Text */}
-          <div className="flex-1 text-center sm:text-left space-y-2">
-            <span
-              className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${getOverallBadge(analysis.skor_gizi)}`}
-            >
+            <p className="mt-4 text-sm font-semibold text-ink-700">
               {analysis.status}
-            </span>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              {analysis.pesan}
             </p>
-          </div>
-        </div>
-
-        {/* ── NUTRIENT BREAKDOWN ── */}
-        <div>
-          <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-            Detail Nutrisi per Porsi
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-            {Object.entries(analysis.detail_analisis).map(([key, data]) => {
-              const st = getNutrientStatusStyle(data.status);
-              return (
-                <div
-                  key={key}
-                  className="space-y-2 rounded-xl border border-white/8 bg-white/5 p-3 transition-colors hover:bg-white/8"
-                >
-                  {/* Label + Status Badge */}
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide truncate">
-                      {data.label}
-                    </span>
-                    <span
-                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${st.cls}`}
-                    >
-                      {st.icon} {st.label}
-                    </span>
-                  </div>
-
-                  {/* Value */}
-                  <p className="text-xl font-black text-white leading-none">
-                    {data.value}
-                    <span className="text-xs text-slate-400 font-normal ml-0.5">
-                      {data.unit}
-                    </span>
-                  </p>
-
-                  {/* Progress Bar */}
-                  <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      style={{ width: `${Math.min(data.score, 100)}%` }}
-                      className={`h-full rounded-full transition-all duration-700 ease-out ${getScoreBarBg(data.score)}`}
-                    />
-                  </div>
-
-                  {/* Standard Range */}
-                  <p className="text-[9px] text-slate-600 font-mono">
-                    Std: {data.min}–{data.max} {data.unit}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── RECOMMENDATIONS ── */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Rekomendasi {isGemini ? "Gemini AI" : "Sistem"}
-            </h4>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-400">
-              {analysis.rekomendasi.length}
-            </span>
+            <p className="mt-1 text-xs text-ink-400">Skor total per porsi</p>
           </div>
 
-          <div className="space-y-2.5">
-            {analysis.rekomendasi.map((rec, idx) => (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            {Object.entries(analysis.detail_analisis).map(([key, data]) => (
               <div
-                key={idx}
-                className={`rounded-xl p-4 border flex items-start gap-3 transition-colors ${getSeverityCard(rec.severity)}`}
+                key={key}
+                className="rounded-[24px] border border-white/70 bg-white/90 p-4 shadow-sm"
               >
-                {getSeverityIcon(rec.severity)}
-
-                <div className="flex-1 min-w-0 space-y-1">
-                  {/* Nutrient chip */}
-                  {rec.nutrient && (
-                    <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/10 text-slate-400">
-                      {rec.nutrient}
-                    </span>
-                  )}
-                  <p className="text-sm text-slate-200 leading-relaxed">
-                    {rec.pesan}
-                  </p>
-                  {rec.detail && (
-                    <p className="text-[10px] text-slate-500 font-mono leading-relaxed">
-                      {rec.detail}
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">
+                      {data.label}
                     </p>
-                  )}
+                    <p className="mt-2 text-2xl font-bold text-ink-700">
+                      {data.value}
+                      <span className="ml-1 text-xs font-medium text-ink-400">
+                        {data.unit}
+                      </span>
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${getStatusChip(data.status)}`}
+                  >
+                    {data.status}
+                  </span>
                 </div>
+
+                <div className="progress-bar">
+                  <div
+                    className={`progress-fill ${getScoreFill(data.score)}`}
+                    style={{ width: `${Math.min(data.score, 100)}%` }}
+                  />
+                </div>
+
+                <p className="mt-2 text-[11px] leading-5 text-ink-400">
+                  Standar {data.min}-{data.max} {data.unit}
+                </p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ── FOOTER ── */}
-        <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-4">
-          <p className="text-[10px] text-slate-600 leading-relaxed">
-            {analysis.standar_referensi}
-          </p>
-          {!isGemini && (
-            <span className="text-[10px] text-amber-500/60 shrink-0">
-              Gemini AI tidak tersedia
-            </span>
-          )}
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[28px] border border-white/70 bg-white/92 p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-forest-50 text-forest-800">
+                <Brain className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-ink-700">Ringkasan Insight</p>
+                <p className="text-xs text-ink-400">{analysis.standar_referensi}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {analysis.rekomendasi.map((rec, idx) => (
+                <div
+                  key={`${rec.jenis}-${idx}`}
+                  className={`rounded-[22px] border p-4 ${getSeverityCard(rec.severity)}`}
+                >
+                  <div className="flex items-start gap-3">
+                    {getSeverityIcon(rec.severity)}
+                    <div className="min-w-0">
+                      {rec.nutrient && (
+                        <span className="table-chip mb-2 bg-white/80 text-ink-500">
+                          {rec.nutrient}
+                        </span>
+                      )}
+                      <p className="text-sm leading-6 text-ink-700">{rec.pesan}</p>
+                      {rec.detail && (
+                        <p className="mt-1 text-xs leading-6 text-ink-400">
+                          {rec.detail}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[28px] bg-gradient-to-br from-forest-950 via-forest-900 to-forest-800 p-5 text-white shadow-[0_24px_52px_rgba(23,59,35,0.22)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">
+              Executive Summary
+            </p>
+            <h4 className="mt-3 text-2xl font-bold tracking-[-0.03em] text-white">
+              {analysis.status}
+            </h4>
+            <p className="mt-3 text-sm leading-7 text-white/78">
+              Panel ini menampilkan evaluasi gizi otomatis untuk membantu tim
+              meninjau apakah komposisi menu sudah mendekati standar target.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="rounded-[22px] border border-white/10 bg-white/8 p-4">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-white/50">
+                  Engine
+                </p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {isGemini ? "Gemini AI" : "Rule Based"}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-white/10 bg-white/8 p-4">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-white/50">
+                  Severity
+                </p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {analysis.rekomendasi.length} rekomendasi
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

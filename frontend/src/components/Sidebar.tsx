@@ -1,15 +1,14 @@
-﻿import type { ComponentType } from "react";
+import type { ComponentType } from "react";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard,
-  UtensilsCrossed,
-  ChefHat,
   Brain,
-  Package,
-  TrendingUp,
-  LogOut,
-  User,
+  ChefHat,
+  LayoutDashboard,
   Leaf,
+  LogOut,
+  Package,
+  User,
+  UtensilsCrossed,
 } from "lucide-react";
 import type { PageView, AuthUser } from "../types";
 
@@ -30,7 +29,6 @@ const NAV_ITEMS: Array<{
   { id: "recipe-builder", label: "Recipe Builder", Icon: ChefHat },
   { id: "ai-lab", label: "AI Nutrition Lab", Icon: Brain },
   { id: "smart-stock", label: "Smart Stock", Icon: Package },
-  { id: "financial", label: "Financial Analytics", Icon: TrendingUp },
 ];
 
 export default function Sidebar({
@@ -44,51 +42,82 @@ export default function Sidebar({
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      style={{ width: 232, minHeight: "100vh", flexShrink: 0 }}
-      className="bg-white/80 backdrop-blur-sm flex flex-col border-r border-forest-100/80"
+      className="card flex w-full flex-col overflow-hidden px-3 py-3 lg:sticky lg:top-5 lg:min-h-[calc(100vh-2.5rem)] lg:w-[280px] lg:px-4 lg:py-4"
     >
-      <div className="px-5 py-5 border-b border-forest-100/70">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-gradient-to-br from-forest-900 to-forest-700 rounded-xl flex items-center justify-center shadow-md">
-            <Leaf className="h-4 w-4 text-white" />
+      <div className="flex flex-col gap-4 border-b border-ink-100 px-2 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-gradient-to-br from-forest-900 via-forest-800 to-forest-600 shadow-[0_18px_28px_rgba(23,59,35,0.18)]">
+            <Leaf className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <p className="text-sm font-bold text-gray-800 leading-tight">Maneki SCM</p>
-            <p className="text-[10px] text-gray-400 leading-tight">MBG - Gizi & Keuangan</p>
+          <div className="min-w-0">
+            <p className="truncate text-base font-bold text-ink-700">
+              Maneki SCM
+            </p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-ink-400">
+              MBG Operations
+            </p>
+          </div>
+        </div>
+
+        <div className="surface-muted rounded-[24px] p-4">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-forest-800/80">
+            Signed in
+          </p>
+          <div className="mt-3 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-forest-800 shadow-sm">
+              <User className="h-[18px] w-[18px]" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-ink-700">
+                {user.nama || user.username}
+              </p>
+              <p className="truncate text-xs text-ink-400">
+                {user.role || "Operator MBG"}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {NAV_ITEMS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            onClick={() => onNavigate(id)}
-            className={`nav-item w-full text-left ${activePage === id ? "active" : ""}`}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            <span className="text-sm">{label}</span>
-          </button>
-        ))}
-      </nav>
+      <div className="flex-1 py-4">
+        <p className="px-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-400">
+          Main Navigation
+        </p>
 
-      <div className="px-3 py-4 border-t border-forest-100/70">
-        <div className="bg-gradient-to-r from-forest-50 to-white rounded-xl p-3 mb-3 border border-forest-100">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-forest-200 rounded-full flex items-center justify-center">
-              <User className="h-3.5 w-3.5 text-forest-800" />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-400 leading-none">Masuk sebagai</p>
-              <p className="text-xs font-bold text-gray-700 leading-tight">{user.nama || user.username}</p>
-            </div>
-          </div>
+        <nav className="mt-3 flex gap-2 overflow-x-auto px-1 pb-2 lg:flex-col lg:overflow-visible">
+          {NAV_ITEMS.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onNavigate(id)}
+              className={`nav-item min-w-max text-left lg:w-full ${activePage === id ? "active" : ""}`}
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/60 text-inherit shadow-sm">
+                <Icon className="h-4 w-4 shrink-0" />
+              </span>
+              <span className="whitespace-nowrap text-sm">{label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <div className="border-t border-ink-100 px-1 pt-4">
+        <div className="rounded-[24px] bg-gradient-to-br from-forest-950 to-forest-800 p-4 text-white shadow-[0_18px_36px_rgba(23,59,35,0.24)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+            Workspace
+          </p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-white/90">
+            Seluruh halaman kini memakai sistem desain baru yang lebih clean,
+            lega, dan konsisten.
+          </p>
         </div>
+
         <button
+          type="button"
           onClick={onLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors text-sm font-medium border border-transparent hover:border-red-100"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[18px] border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100"
         >
-          <LogOut className="h-3.5 w-3.5" />
+          <LogOut className="h-4 w-4" />
           <span>Keluar</span>
         </button>
       </div>

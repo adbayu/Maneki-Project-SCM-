@@ -548,37 +548,37 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         title: "Total Menu",
         value: totalMenus,
         subtitle: "Seluruh menu tercatat",
-        gradient: "from-emerald-500 to-teal-600",
-        iconBg: "bg-emerald-400/20",
+        gradient: "from-forest-950 via-forest-900 to-forest-700",
+        iconBg: "bg-white/10",
         icon: UtensilsCrossed,
-        watermarkColor: "text-white/10",
+        watermarkColor: "text-white/8",
       },
       {
         title: "Menu Aktif",
         value: activeMenus,
         subtitle: "Siap produksi hari ini",
-        gradient: "from-blue-500 to-indigo-600",
-        iconBg: "bg-blue-400/20",
+        gradient: "from-[#ffffff] to-[#f7faf7]",
+        iconBg: "bg-forest-100",
         icon: Activity,
-        watermarkColor: "text-white/10",
+        watermarkColor: "text-forest-100",
       },
       {
         title: "Rasio Aktif",
         value: `${activeRatio}%`,
         subtitle: "Menu aktif vs total",
-        gradient: "from-violet-500 to-purple-600",
-        iconBg: "bg-violet-400/20",
+        gradient: "from-[#ffffff] to-[#f7faf7]",
+        iconBg: "bg-forest-100",
         icon: TrendingUp,
-        watermarkColor: "text-white/10",
+        watermarkColor: "text-forest-100",
       },
       {
         title: "Kategori MBG",
         value: "5",
         subtitle: "Siswa, Balita, Ibu Hamil, dll",
-        gradient: "from-amber-500 to-orange-600",
-        iconBg: "bg-amber-400/20",
+        gradient: "from-[#ffffff] to-[#f7faf7]",
+        iconBg: "bg-forest-100",
         icon: Users,
-        watermarkColor: "text-white/10",
+        watermarkColor: "text-forest-100",
       },
     ];
   }, [stats]);
@@ -637,42 +637,65 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: "easeOut" }}
-      className="space-y-6 p-6"
+      className="page-shell space-y-6"
     >
-      <div className="flex items-start justify-between">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard MBG</h1>
-          <p className="text-sm text-gray-400">{today}</p>
+          <span className="soft-badge">Operations Overview</span>
+          <h1 className="page-title mt-4">Dashboard MBG</h1>
+          <p className="page-subtitle">
+            {today}. Pantau menu, evaluasi nutrisi, dan susun jadwal mingguan
+            dalam satu workspace yang lebih lega dan fokus.
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {summaryWidgets.map((widget, idx) => {
           const Icon = widget.icon;
+          const isPrimary = idx === 0;
           return (
             <motion.div
               key={widget.title}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.06 }}
-              className={`relative cursor-default overflow-hidden rounded-2xl bg-linear-to-br ${widget.gradient} p-5 text-white shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl`}
+              className={`relative cursor-default overflow-hidden rounded-[30px] border p-6 transition-all hover:-translate-y-1 ${
+                isPrimary
+                  ? `bg-linear-to-br ${widget.gradient} border-white/10 text-white shadow-[0_24px_54px_rgba(23,59,35,0.22)]`
+                  : `bg-linear-to-br ${widget.gradient} border-ink-100 text-ink-700 shadow-[0_16px_36px_rgba(36,49,39,0.07)]`
+              }`}
             >
               <Icon
                 className={`pointer-events-none absolute -bottom-4 -right-4 h-24 w-24 ${widget.watermarkColor}`}
               />
-              <div className="absolute right-0 top-0 h-32 w-32 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5" />
+              <div
+                className={`absolute right-0 top-0 h-32 w-32 translate-x-1/2 -translate-y-1/2 rounded-full ${
+                  isPrimary ? "bg-white/5" : "bg-forest-50"
+                }`}
+              />
 
               <div className="relative z-10">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
+                  <p
+                    className={`text-xs font-semibold uppercase tracking-wider ${
+                      isPrimary ? "text-white/70" : "text-ink-400"
+                    }`}
+                  >
                     {widget.title}
                   </p>
                   <div className={`${widget.iconBg} rounded-xl p-2`}>
-                    <Icon className="h-4 w-4 text-white" />
+                    <Icon
+                      className={`h-4 w-4 ${isPrimary ? "text-white" : "text-forest-800"}`}
+                    />
                   </div>
                 </div>
                 <p className="mb-1 text-3xl font-black">{widget.value}</p>
-                <p className="text-xs font-medium text-white/60">
+                <p
+                  className={`text-xs font-medium ${
+                    isPrimary ? "text-white/60" : "text-ink-400"
+                  }`}
+                >
                   {widget.subtitle}
                 </p>
               </div>
@@ -858,8 +881,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
           className="card p-6"
         >
           <div className="mb-4 flex items-center gap-2">
-            <div className="rounded-xl bg-violet-100 p-2">
-              <Gauge className="h-5 w-5 text-violet-600" />
+            <div className="rounded-2xl bg-forest-50 p-2.5">
+              <Gauge className="h-5 w-5 text-forest-800" />
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-800">

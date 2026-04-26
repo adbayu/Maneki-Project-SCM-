@@ -655,37 +655,44 @@ export default function RecipeBuilderPage({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="space-y-6 p-6"
+      className="page-shell space-y-6"
     >
-      <div className="flex items-center gap-3">
+      <div className="page-header">
+        <div className="flex items-start gap-3">
         <button
           onClick={() => {
             clearEditTargetMenuId();
             onNavigate("menu-catalog");
           }}
-          className="rounded-xl p-2 transition-colors hover:bg-white"
+          className="mt-1 rounded-[18px] border border-white/70 bg-white/90 p-3 text-ink-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-white"
         >
-          <ArrowLeft className="h-5 w-5 text-gray-500" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-forest-100 p-2">
+        <div>
+          <span className="soft-badge">
+            {isEditMode ? "Edit Mode" : "Create Menu"}
+          </span>
+          <div className="mt-4 flex items-center gap-3">
+          <div className="rounded-[20px] bg-forest-50 p-3">
             <ChefHat className="h-6 w-6 text-forest-800" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-800">
+            <h1 className="page-title text-[2rem]">
               {isEditMode ? "Edit Menu" : "Recipe Builder"}
             </h1>
-            <p className="text-sm text-gray-400">
+            <p className="page-subtitle mt-1">
               {isEditMode
-                ? "Perbarui menu dan lihat histori perubahannya"
-                : "Create new menu items with nutrition calculation"}
+                ? "Perbarui menu dan lihat histori perubahannya."
+                : "Tambah menu baru dengan form yang lebih rapi, lega, dan mudah dipindai."}
             </p>
           </div>
         </div>
+        </div>
+        </div>
 
         {isEditMode && (
-          <span className="ml-auto rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
+          <span className="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-700">
             Edit ID #{editingMenuId}
           </span>
         )}
@@ -693,18 +700,21 @@ export default function RecipeBuilderPage({
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
-          <form onSubmit={handleSave} className="card space-y-5 p-6">
+          <form
+            onSubmit={handleSave}
+            className="card space-y-6 rounded-[32px] p-6 sm:p-7"
+          >
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                Menu Name
+                Nama Menu
               </label>
               <input
                 type="text"
                 value={nama}
                 onChange={(e) => setNama(e.target.value)}
-                placeholder="Enter menu name..."
+                placeholder="Masukkan nama menu"
                 required
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-forest-400 focus:bg-white focus:ring-2 focus:ring-forest-100"
+                className="w-full px-4 py-3 text-sm"
               />
             </div>
 
@@ -716,7 +726,7 @@ export default function RecipeBuilderPage({
                 <select
                   value={kategori}
                   onChange={(e) => setKategori(e.target.value as MenuKategori)}
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-forest-400 focus:bg-white"
+                  className="w-full px-4 py-3 text-sm"
                 >
                   {KATEGORIS.map((k) => (
                     <option key={k} value={k}>
@@ -728,7 +738,7 @@ export default function RecipeBuilderPage({
 
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                  Selling Price (Rp)
+                  Harga Jual (Rp)
                 </label>
                 <input
                   type="number"
@@ -736,7 +746,7 @@ export default function RecipeBuilderPage({
                   onChange={(e) => setHargaJual(Number(e.target.value))}
                   min={0}
                   placeholder="0"
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-forest-400 focus:bg-white"
+                  className="w-full px-4 py-3 text-sm"
                 />
               </div>
             </div>
@@ -787,9 +797,9 @@ export default function RecipeBuilderPage({
               </div>
             </div>
 
-            <div className="rounded-xl border border-dashed border-violet-300 bg-violet-50/40 p-4">
+            <div className="rounded-[26px] border border-dashed border-forest-200 bg-forest-50/60 p-5">
               <div className="mb-3 flex items-start gap-2">
-                <div className="rounded-lg bg-violet-100 p-2 text-violet-700">
+                <div className="rounded-xl bg-white p-2 text-forest-700 shadow-sm">
                   <ImageIcon className="h-4 w-4" />
                 </div>
                 <div>
@@ -809,10 +819,10 @@ export default function RecipeBuilderPage({
                     <img
                       src={imagePreview}
                       alt="Preview gambar menu"
-                      className="h-24 w-24 rounded-xl border border-violet-200 object-cover"
+                      className="h-24 w-24 rounded-2xl border border-forest-200 object-cover"
                     />
                   ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-violet-200 bg-white text-violet-300">
+                    <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-forest-200 bg-white text-forest-300">
                       <ChefHat className="h-8 w-8" />
                     </div>
                   )}
@@ -831,7 +841,7 @@ export default function RecipeBuilderPage({
                   )}
                 </div>
 
-                <label className="cursor-pointer rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100">
+                <label className="cursor-pointer rounded-[18px] border border-forest-200 bg-white px-4 py-3 text-sm font-semibold text-forest-800 transition-colors hover:bg-forest-100">
                   <input
                     type="file"
                     accept="image/*"
@@ -849,14 +859,14 @@ export default function RecipeBuilderPage({
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <label className="text-sm font-semibold text-gray-700">
-                  Ingredients
+                  Bahan
                 </label>
                 <button
                   type="button"
                   onClick={addIng}
                   className="btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs"
                 >
-                  <Plus className="h-3 w-3" /> Add Ingredient
+                  <Plus className="h-3 w-3" /> Tambah Bahan
                 </button>
               </div>
 
@@ -873,8 +883,8 @@ export default function RecipeBuilderPage({
                       onChange={(e) =>
                         updateIng(idx, "nama_bahan", e.target.value)
                       }
-                      placeholder="Ingredient name"
-                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white"
+                      placeholder="Nama bahan"
+                      className="rounded-[16px] px-3 py-2.5 text-sm"
                     />
                     <input
                       type="number"
@@ -885,12 +895,12 @@ export default function RecipeBuilderPage({
                       placeholder="Qty"
                       min={0}
                       step={0.01}
-                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white"
+                      className="rounded-[16px] px-3 py-2.5 text-sm"
                     />
                     <select
                       value={ing.satuan}
                       onChange={(e) => updateIng(idx, "satuan", e.target.value)}
-                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none"
+                      className="rounded-[16px] px-3 py-2.5 text-sm"
                     >
                       {SATUANS.map((s) => (
                         <option key={s} value={s}>
@@ -904,8 +914,8 @@ export default function RecipeBuilderPage({
                       onChange={(e) =>
                         updateIng(idx, "harga_satuan", Number(e.target.value))
                       }
-                      placeholder="Cost/kg"
-                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white"
+                      placeholder="Harga/satuan"
+                      className="rounded-[16px] px-3 py-2.5 text-sm"
                     />
                     <button
                       type="button"
@@ -931,7 +941,7 @@ export default function RecipeBuilderPage({
 
             <div>
               <label className="mb-3 block text-sm font-semibold text-gray-700">
-                6-Pillar Nutrition Input
+                Input Nutrisi
               </label>
               <div className="grid grid-cols-3 gap-3">
                 {(
@@ -955,7 +965,7 @@ export default function RecipeBuilderPage({
                       placeholder="0"
                       min={0}
                       step={0.1}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-forest-400 focus:bg-white"
+                      className="w-full px-3 py-2.5 text-sm"
                     />
                   </div>
                 ))}
@@ -991,10 +1001,10 @@ export default function RecipeBuilderPage({
                   "💾"
                 )}
                 {uploadingImage
-                  ? "Uploading Image..."
+                  ? "Mengunggah Gambar..."
                   : isEditMode
                     ? "Simpan Perubahan"
-                    : "Save Menu"}
+                    : "Simpan Menu"}
               </button>
 
               <button
@@ -1003,9 +1013,9 @@ export default function RecipeBuilderPage({
                   clearEditTargetMenuId();
                   onNavigate("menu-catalog");
                 }}
-                className="rounded-xl border border-gray-200 px-6 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                className="btn-secondary px-6 py-3 text-sm"
               >
-                Cancel
+                Batal
               </button>
             </div>
 
@@ -1051,7 +1061,7 @@ export default function RecipeBuilderPage({
         </div>
 
         <div className="space-y-4">
-          <div className="card p-5">
+          <div className="card rounded-[32px] p-5">
             <div className="mb-4 flex items-center gap-2">
               <Brain className="h-5 w-5 text-forest-700" />
               <h3 className="text-base font-bold text-gray-800">
@@ -1108,7 +1118,7 @@ export default function RecipeBuilderPage({
                   "Ayam 200 g\nBayam 100 g\nBeras 150 g\nWortel 80 g"
                 }
                 rows={5}
-                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 font-mono text-sm outline-none focus:border-forest-400 focus:bg-white focus:ring-2 focus:ring-forest-100"
+                className="w-full resize-none px-3 py-2.5 font-mono text-sm"
               />
               <p className="mt-1 text-[10px] text-gray-400">
                 Format: Nama Jumlah Satuan (satu per baris)
@@ -1137,7 +1147,7 @@ export default function RecipeBuilderPage({
           </div>
 
           {aiResult && (
-            <div className="card space-y-3 p-5">
+            <div className="card space-y-3 rounded-[32px] p-5">
               <div className="flex items-center gap-2">
                 <span className="text-lg">✨</span>
                 <h4 className="font-bold text-gray-800">
