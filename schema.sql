@@ -46,6 +46,18 @@ CREATE TABLE IF NOT EXISTS menu_nutrition (
   FOREIGN KEY (menu_id) REFERENCES menus(id) ON DELETE CASCADE
 );
 
+-- Tabel untuk menyimpan makronutrien tambahan manual (opsional) per menu
+CREATE TABLE IF NOT EXISTS menu_manual_macronutrients (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  menu_id INT NOT NULL,
+  nama VARCHAR(120) NOT NULL,
+  nilai DECIMAL(10,2) DEFAULT 0,
+  satuan VARCHAR(30) NOT NULL DEFAULT 'g',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (menu_id) REFERENCES menus(id) ON DELETE CASCADE
+);
+
 -- Tabel untuk menyimpan log rekomendasi AI
 CREATE TABLE IF NOT EXISTS ai_recommendations (
   id INT AUTO_INCREMENT PRIMARY KEY,

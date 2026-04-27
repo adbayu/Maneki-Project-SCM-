@@ -63,10 +63,16 @@ router.get("/:id", async (req, res) => {
       [req.params.id],
     );
 
+    const [manualMacros] = await db.query(
+      "SELECT * FROM menu_manual_macronutrients WHERE menu_id = ? ORDER BY id",
+      [req.params.id],
+    );
+
     res.json({
       ...menuRows[0],
       ingredients,
       nutrition: nutrition[0] || null,
+      manual_macronutrients: manualMacros,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -75,7 +81,14 @@ router.get("/:id", async (req, res) => {
 
 // POST /api/menu - Create new menu with ingredients and nutrition
 router.post("/", async (req, res) => {
-  const { nama, kategori, deskripsi, ingredients, nutrition } = req.body;
+  const {
+    nama,
+    kategori,
+    deskripsi,
+    ingredients,
+    nutrition,
+    manual_macronutrients,
+  } = req.body;
 
   if (!nama || !kategori) {
     return res.status(400).json({ error: "Nama dan kategori wajib diisi" });
@@ -132,6 +145,28 @@ router.post("/", async (req, res) => {
       );
     }
 
+    // 4. Insert optional manual macronutrients
+    if (
+      Array.isArray(manual_macronutrients) &&
+      manual_macronutrients.length > 0
+    ) {
+      const macroValues = manual_macronutrients
+        .filter((m) => typeof m.nama === "string" && m.nama.trim() !== "")
+        .map((m) => [
+          menuId,
+          m.nama.trim(),
+          Number(m.nilai) || 0,
+          (m.satuan || "g").trim() || "g",
+        ]);
+
+      if (macroValues.length > 0) {
+        await connection.query(
+          "INSERT INTO menu_manual_macronutrients (menu_id, nama, nilai, satuan) VALUES ?",
+          [macroValues],
+        );
+      }
+    }
+
     await connection.commit();
 
     // Fetch the complete menu data
@@ -146,6 +181,10 @@ router.post("/", async (req, res) => {
       "SELECT * FROM menu_nutrition WHERE menu_id = ?",
       [menuId],
     );
+    const [newManualMacros] = await db.query(
+      "SELECT * FROM menu_manual_macronutrients WHERE menu_id = ? ORDER BY id",
+      [menuId],
+    );
 
     res.status(201).json({
       message: "Menu berhasil dibuat",
@@ -153,6 +192,7 @@ router.post("/", async (req, res) => {
         ...newMenu[0],
         ingredients: newIngredients,
         nutrition: newNutrition[0] || null,
+        manual_macronutrients: newManualMacros,
       },
     });
   } catch (error) {
@@ -166,7 +206,14 @@ router.post("/", async (req, res) => {
 // PUT /api/menu/:id - Update menu
 router.put("/:id", async (req, res) => {
   const menuId = req.params.id;
-  const { nama, kategori, deskripsi, ingredients, nutrition } = req.body;
+  const {
+    nama,
+    kategori,
+    deskripsi,
+    ingredients,
+    nutrition,
+    manual_macronutrients,
+  } = req.body;
 
   const connection = await db.getConnection();
   try {
@@ -230,6 +277,35 @@ router.put("/:id", async (req, res) => {
       );
     }
 
+    // 4. Replace optional manual macronutrients
+    if (manual_macronutrients) {
+      await connection.query(
+        "DELETE FROM menu_manual_macronutrients WHERE menu_id = ?",
+        [menuId],
+      );
+
+      if (
+        Array.isArray(manual_macronutrients) &&
+        manual_macronutrients.length
+      ) {
+        const macroValues = manual_macronutrients
+          .filter((m) => typeof m.nama === "string" && m.nama.trim() !== "")
+          .map((m) => [
+            menuId,
+            m.nama.trim(),
+            Number(m.nilai) || 0,
+            (m.satuan || "g").trim() || "g",
+          ]);
+
+        if (macroValues.length > 0) {
+          await connection.query(
+            "INSERT INTO menu_manual_macronutrients (menu_id, nama, nilai, satuan) VALUES ?",
+            [macroValues],
+          );
+        }
+      }
+    }
+
     await connection.commit();
 
     // Fetch updated data
@@ -244,6 +320,10 @@ router.put("/:id", async (req, res) => {
       "SELECT * FROM menu_nutrition WHERE menu_id = ?",
       [menuId],
     );
+    const [updatedManualMacros] = await db.query(
+      "SELECT * FROM menu_manual_macronutrients WHERE menu_id = ? ORDER BY id",
+      [menuId],
+    );
 
     res.json({
       message: "Menu berhasil diperbarui",
@@ -251,6 +331,7 @@ router.put("/:id", async (req, res) => {
         ...updatedMenu[0],
         ingredients: updatedIngredients,
         nutrition: updatedNutrition[0] || null,
+        manual_macronutrients: updatedManualMacros,
       },
     });
   } catch (error) {

@@ -25,6 +25,14 @@ export interface MenuNutrition {
   vitamins?: number; // % of daily value
 }
 
+export interface ManualMacronutrient {
+  id?: number;
+  menu_id?: number;
+  nama: string;
+  nilai: number;
+  satuan: string;
+}
+
 export type MenuKategori = "Siswa" | "Balita" | "Ibu Hamil";
 
 export interface Menu {
@@ -51,6 +59,7 @@ export interface Menu {
   // Detailed
   ingredients?: MenuIngredient[];
   nutrition?: MenuNutrition | null;
+  manual_macronutrients?: ManualMacronutrient[];
 }
 
 export interface NutrientAnalysis {

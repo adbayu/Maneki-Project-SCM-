@@ -410,6 +410,59 @@
     background-color: rgba(25, 44, 32, 0.92) !important;
   }
 
+  body.night-mode .page-shell [class*="from-forest-50"] {
+    background-image: linear-gradient(
+      180deg,
+      rgba(16, 24, 19, 0.96),
+      rgba(12, 18, 15, 0.96)
+    ) !important;
+  }
+
+  body.night-mode .page-shell [class*="to-white"] {
+    background-image: linear-gradient(
+      180deg,
+      rgba(16, 24, 19, 0.96),
+      rgba(12, 18, 15, 0.96)
+    ) !important;
+  }
+
+  body.night-mode .page-shell [class*="bg-gray-50"] {
+    background-color: rgba(16, 24, 19, 0.95) !important;
+  }
+
+  body.night-mode .page-shell [class*="bg-white/"] {
+    background-color: rgba(14, 22, 18, 0.92) !important;
+  }
+
+  body.night-mode .page-shell [class*="bg-white"] {
+    background-color: rgba(14, 22, 18, 0.92) !important;
+  }
+
+  body.night-mode .page-shell [class*="border-gray-100"],
+  body.night-mode .page-shell [class*="border-gray-200"] {
+    border-color: rgba(148, 163, 184, 0.14) !important;
+  }
+
+  body.night-mode .page-shell [class*="text-gray-700"],
+  body.night-mode .page-shell [class*="text-gray-800"],
+  body.night-mode .page-shell [class*="text-ink-700"] {
+    color: #eef6ef !important;
+  }
+
+  body.night-mode .page-shell [class*="text-gray-500"],
+  body.night-mode .page-shell [class*="text-gray-400"],
+  body.night-mode .page-shell [class*="text-ink-400"] {
+    color: #97a89b !important;
+  }
+
+  body.night-mode .page-shell [class*="bg-forest-50"] {
+    background-color: rgba(24, 40, 31, 0.92) !important;
+  }
+
+  body.night-mode .page-shell [class*="bg-forest-100"] {
+    background-color: rgba(34, 58, 44, 0.92) !important;
+  }
+
   body.night-mode .login-shell {
     background:
       radial-gradient(

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type {
   GeneratedMenu,
+  ManualMacronutrient,
   MenuIngredient,
   MenuKategori,
   MenuNutrition,
@@ -89,6 +90,10 @@ interface OriginalMenuSnapshot {
   nutrition: MenuNutrition;
 }
 
+interface ManualMacroFormRow extends ManualMacronutrient {
+  rowId: string;
+}
+
 const emptyIng: MenuIngredient = {
   nama_bahan: "",
   jumlah: 0,
@@ -104,6 +109,17 @@ const emptyNut: MenuNutrition = {
   serat: 0,
   gula: 0,
 };
+
+function createMacroRow(
+  seed?: Partial<ManualMacronutrient>,
+): ManualMacroFormRow {
+  return {
+    rowId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    nama: seed?.nama || "",
+    nilai: toNumber(seed?.nilai),
+    satuan: seed?.satuan || "g",
+  };
+}
 
 function resolveMenuImageUrl(gambarUrl: string | null | undefined) {
   if (!gambarUrl) return null;
@@ -154,6 +170,7 @@ export default function RecipeBuilderPage({
     { ...emptyIng },
   ]);
   const [nutrition, setNutrition] = useState<MenuNutrition>({ ...emptyNut });
+  const [manualMacros, setManualMacros] = useState<ManualMacroFormRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{
     type: "success" | "error";
@@ -200,6 +217,7 @@ export default function RecipeBuilderPage({
           kalori?: number;
           ingredients?: MenuIngredient[];
           nutrition?: MenuNutrition | null;
+          manual_macronutrients?: ManualMacronutrient[];
         };
 
         const cleanName = sanitizeMenuName(menu.nama || "");
@@ -220,6 +238,17 @@ export default function RecipeBuilderPage({
         setHargaJual(toNumber(menu.harga_jual));
         setIngredients(normalizedIng);
         setNutrition(normalizedNut);
+        setManualMacros(
+          Array.isArray(menu.manual_macronutrients)
+            ? menu.manual_macronutrients.map((item) =>
+                createMacroRow({
+                  nama: item.nama,
+                  nilai: item.nilai,
+                  satuan: item.satuan,
+                }),
+              )
+            : [],
+        );
         setImageFile(null);
         setImagePreview(resolveMenuImageUrl(menu.gambar_url || null));
 
@@ -373,6 +402,26 @@ export default function RecipeBuilderPage({
   const updateNut = (field: keyof MenuNutrition, val: number) =>
     setNutrition({ ...nutrition, [field]: val });
 
+  const addManualMacro = () => {
+    setManualMacros((prev) => [...prev, createMacroRow()]);
+  };
+
+  const removeManualMacro = (rowId: string) => {
+    setManualMacros((prev) => prev.filter((item) => item.rowId !== rowId));
+  };
+
+  const updateManualMacro = (
+    rowId: string,
+    field: keyof ManualMacronutrient,
+    value: string | number,
+  ) => {
+    setManualMacros((prev) =>
+      prev.map((item) =>
+        item.rowId === rowId ? { ...item, [field]: value } : item,
+      ),
+    );
+  };
+
   const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -443,6 +492,14 @@ export default function RecipeBuilderPage({
     setSaving(true);
     setSaveMsg(null);
 
+    const validManualMacros = manualMacros
+      .filter((item) => item.nama.trim())
+      .map((item) => ({
+        nama: item.nama.trim(),
+        nilai: toNumber(item.nilai),
+        satuan: item.satuan.trim() || "g",
+      }));
+
     try {
       const endpoint = isEditMode ? `${API}/${editingMenuId}` : API;
       const method = isEditMode ? "PUT" : "POST";
@@ -457,6 +514,7 @@ export default function RecipeBuilderPage({
           harga_jual: hargaJual,
           ingredients: validIngredients,
           nutrition,
+          manual_macronutrients: validManualMacros,
         }),
       });
 
@@ -659,36 +717,36 @@ export default function RecipeBuilderPage({
     >
       <div className="page-header">
         <div className="flex items-start gap-3">
-        <button
-          onClick={() => {
-            clearEditTargetMenuId();
-            onNavigate("menu-catalog");
-          }}
-          className="mt-1 rounded-[18px] border border-white/70 bg-white/90 p-3 text-ink-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-white"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+          <button
+            onClick={() => {
+              clearEditTargetMenuId();
+              onNavigate("menu-catalog");
+            }}
+            className="mt-1 rounded-[18px] border border-white/70 bg-white/90 p-3 text-ink-500 shadow-sm transition hover:-translate-y-0.5 hover:bg-white"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
 
-        <div>
-          <span className="soft-badge">
-            {isEditMode ? "Edit Mode" : "Create Menu"}
-          </span>
-          <div className="mt-4 flex items-center gap-3">
-          <div className="rounded-[20px] bg-forest-50 p-3">
-            <ChefHat className="h-6 w-6 text-forest-800" />
-          </div>
           <div>
-            <h1 className="page-title text-[2rem]">
-              {isEditMode ? "Edit Menu" : "Recipe Builder"}
-            </h1>
-            <p className="page-subtitle mt-1">
-              {isEditMode
-                ? "Perbarui menu dan lihat histori perubahannya."
-                : "Tambah menu baru dengan form yang lebih rapi, lega, dan mudah dipindai."}
-            </p>
+            <span className="soft-badge">
+              {isEditMode ? "Edit Mode" : "Create Menu"}
+            </span>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="rounded-[20px] bg-forest-50 p-3">
+                <ChefHat className="h-6 w-6 text-forest-800" />
+              </div>
+              <div>
+                <h1 className="page-title text-[2rem]">
+                  {isEditMode ? "Edit Menu" : "Recipe Builder"}
+                </h1>
+                <p className="page-subtitle mt-1">
+                  {isEditMode
+                    ? "Perbarui menu dan lihat histori perubahannya."
+                    : "Tambah menu baru dengan form yang lebih rapi, lega, dan mudah dipindai."}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-        </div>
         </div>
 
         {isEditMode && (
@@ -969,6 +1027,93 @@ export default function RecipeBuilderPage({
                     />
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700">
+                      Makronutrien Manual (Opsional)
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Tambahkan nilai makronutrien tambahan secara manual.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addManualMacro}
+                    className="rounded-xl border border-forest-200 bg-white px-3 py-1.5 text-xs font-semibold text-forest-800 transition-colors hover:bg-forest-50"
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <Plus className="h-3 w-3" /> Tambah Makronutrien
+                    </span>
+                  </button>
+                </div>
+
+                {manualMacros.length === 0 ? (
+                  <p className="text-xs text-gray-400">
+                    Belum ada makronutrien manual.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {manualMacros.map((item) => (
+                      <div
+                        key={item.rowId}
+                        className="grid items-center gap-2"
+                        style={{ gridTemplateColumns: "1fr 110px 90px 32px" }}
+                      >
+                        <input
+                          type="text"
+                          value={item.nama}
+                          onChange={(e) =>
+                            updateManualMacro(
+                              item.rowId,
+                              "nama",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Contoh: Omega-3"
+                          className="rounded-[14px] px-3 py-2.5 text-sm"
+                        />
+                        <input
+                          type="number"
+                          value={item.nilai || ""}
+                          onChange={(e) =>
+                            updateManualMacro(
+                              item.rowId,
+                              "nilai",
+                              Number(e.target.value),
+                            )
+                          }
+                          min={0}
+                          step={0.1}
+                          placeholder="Nilai"
+                          className="rounded-[14px] px-3 py-2.5 text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={item.satuan}
+                          onChange={(e) =>
+                            updateManualMacro(
+                              item.rowId,
+                              "satuan",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="g"
+                          className="rounded-[14px] px-3 py-2.5 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeManualMacro(item.rowId)}
+                          className="rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

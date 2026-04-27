@@ -5,7 +5,6 @@ require("dotenv").config();
 
 const menuRoutes = require("./routes/menu");
 const authRoutes = require("./routes/auth");
-const financialRoutes = require("./routes/financial");
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -20,7 +19,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Routes
 app.use("/api/menu", menuRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/financial", financialRoutes);
 
 // Basic healthcheck
 app.get("/health", (req, res) => {

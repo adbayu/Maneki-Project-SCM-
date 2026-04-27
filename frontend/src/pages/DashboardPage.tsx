@@ -795,7 +795,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
       {
         title: "Kategori MBG",
         value: "5",
-        subtitle: "Siswa, Balita, Ibu Hamil, dll",
+        subtitle: "Siswa, Balita, Ibu Hamil",
         gradient: "from-[#ffffff] to-[#f7faf7]",
         iconBg: "bg-forest-100",
         icon: Users,
