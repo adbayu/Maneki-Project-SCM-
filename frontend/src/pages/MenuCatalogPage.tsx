@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   AlertTriangle,
   Brain,
@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import AIAnalysisPanel from "../components/AIAnalysisPanel";
+import { CalorieIcon } from "../components/icons/NutrientIcons";
 import type { Menu, PageView } from "../types";
 import {
   clearEditTargetMenuId,
@@ -351,7 +352,8 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
                       <h3 className="truncate text-lg font-bold text-ink-700">
                         {displayName}
                       </h3>
-                      <p className="mt-1 text-[13px] text-ink-400">
+                      <p className="mt-1 text-[13px] text-ink-400 inline-flex items-center gap-2">
+                        <CalorieIcon className="h-3 w-3 text-orange-600" />{" "}
                         {menu.kalori ?? 0} kkal per porsi
                       </p>
                     </div>
@@ -431,7 +433,7 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
                         setEditTargetMenuId(menu.id);
                         onNavigate("recipe-builder");
                       }}
-                      className="flex h-11 w-11 items-center justify-center rounded-[18px] border border-amber-100 bg-amber-50 text-amber-700 transition hover:bg-amber-100"
+                      className="flex h-11 w-11 items-center justify-center rounded-[18px] border border-emerald-100 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
                       title="Edit menu"
                     >
                       <Pencil className="h-4 w-4" />
@@ -439,91 +441,87 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
 
                     <button
                       onClick={() => setDeleteTarget(menu)}
-                      className="flex h-11 w-11 items-center justify-center rounded-[18px] border border-red-100 bg-red-50 text-red-600 transition hover:bg-red-100"
+                      className="flex h-11 w-11 items-center justify-center rounded-[18px] border border-emerald-100 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
-                <AnimatePresence>
-                  {analyzingId === menu.id && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <AIAnalysisPanel
-                        menuId={menu.id}
-                        menuNama={displayName}
-                        onAnalysisSaved={() => setAnalysisVersion((v) => v + 1)}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* AI Analysis rendered as modal to keep grid tidy */}
               </motion.div>
             );
           })}
         </div>
       )}
 
-      <AnimatePresence>
-        {deleteTarget && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#152116]/35 p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              className="card w-full max-w-md rounded-[32px] p-6"
-            >
-              <div className="mb-3 flex items-start gap-3">
-                <div className="rounded-[18px] bg-red-50 p-3 text-red-600">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-ink-700">
-                    Konfirmasi Hapus Menu
-                  </h3>
-                  <p className="text-sm leading-7 text-ink-400">
-                    Menu{" "}
-                    <span className="font-semibold text-ink-700">
-                      {sanitizeMenuName(deleteTarget.nama)}
-                    </span>{" "}
-                    akan dihapus permanen.
-                  </p>
-                </div>
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-lg">
+            <div className="mb-3 flex items-start gap-3">
+              <div className="rounded-[18px] bg-emerald-50 p-3 text-emerald-600">
+                <AlertTriangle className="h-5 w-5" />
               </div>
-
-              <p className="rounded-[20px] border border-red-100 bg-red-50 px-4 py-3 text-xs leading-6 text-red-700">
-                Tindakan ini tidak bisa dibatalkan. Pastikan menu yang dipilih
-                sudah benar.
-              </p>
-
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => setDeleteTarget(null)}
-                  className="btn-secondary flex-1 px-3 py-3 text-sm"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  disabled={deleting}
-                  className="flex-1 rounded-[18px] bg-red-600 px-3 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
-                >
-                  {deleting ? "Menghapus..." : "Ya, Hapus Menu"}
-                </button>
+              <div>
+                <h3 className="text-lg font-bold text-ink-700">
+                  Konfirmasi Hapus Menu
+                </h3>
+                <p className="text-sm leading-7 text-ink-400">
+                  Menu{" "}
+                  <span className="font-semibold text-ink-700">
+                    {sanitizeMenuName(deleteTarget.nama)}
+                  </span>{" "}
+                  akan dihapus permanen.
+                </p>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+
+            <p className="rounded-[20px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-6 text-emerald-800">
+              Tindakan ini tidak bisa dibatalkan. Pastikan menu yang dipilih
+              sudah benar.
+            </p>
+
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="btn-secondary flex-1 px-3 py-3 text-sm"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="flex-1 rounded-[18px] bg-emerald-700 px-3 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60"
+              >
+                {deleting ? "Menghapus..." : "Ya, Hapus Menu"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Analysis Modal */}
+      {analyzingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Analisis AI</h3>
+              <button
+                onClick={() => setAnalyzingId(null)}
+                className="text-sm text-gray-500"
+              >
+                Tutup
+              </button>
+            </div>
+            <AIAnalysisPanel
+              menuId={analyzingId}
+              menuNama={menus.find((m) => m.id === analyzingId)?.nama || ""}
+              onAnalysisSaved={() => setAnalysisVersion((v) => v + 1)}
+            />
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

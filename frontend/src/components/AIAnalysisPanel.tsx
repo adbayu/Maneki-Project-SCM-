@@ -85,32 +85,26 @@ export default function AIAnalysisPanel({
     });
 
   const getScoreStroke = (score: number) => {
-    if (score >= 75) return "#2e7d32";
-    if (score >= 50) return "#f59e0b";
-    return "#ef4444";
+    if (score >= 75) return "#166534";
+    if (score >= 50) return "#34d399";
+    return "#dff6e8";
   };
 
   const getScoreText = (score: number) => {
-    if (score >= 75) return "text-forest-800";
-    if (score >= 50) return "text-amber-600";
-    return "text-red-600";
+    if (score >= 75) return "text-emerald-800";
+    if (score >= 50) return "text-emerald-700";
+    return "text-emerald-600";
   };
 
   const getScoreFill = (score: number) => {
-    if (score >= 75) return "bg-forest-700";
-    if (score >= 50) return "bg-amber-500";
-    return "bg-red-500";
+    if (score >= 75) return "bg-emerald-800";
+    if (score >= 50) return "bg-emerald-400";
+    return "bg-emerald-100";
   };
 
-  const getStatusChip = (status: string) => {
-    switch (status) {
-      case "optimal":
-        return "border-emerald-200 bg-emerald-50 text-emerald-700";
-      case "rendah":
-        return "border-amber-200 bg-amber-50 text-amber-700";
-      default:
-        return "border-red-200 bg-red-50 text-red-700";
-    }
+  const getStatusChip = (_status: string) => {
+    // Use green-graded chips for semantic consistency
+    return "border-emerald-100 bg-emerald-50 text-emerald-700";
   };
 
   const getSeverityIcon = (severity: string) => {
@@ -121,16 +115,14 @@ export default function AIAnalysisPanel({
     }
     if (severity === "warning") {
       return (
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
       );
     }
-    return <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />;
+    return <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-800" />;
   };
 
-  const getSeverityCard = (severity: string) => {
-    if (severity === "success") return "border-emerald-100 bg-emerald-50/70";
-    if (severity === "warning") return "border-amber-100 bg-amber-50/70";
-    return "border-red-100 bg-red-50/70";
+  const getSeverityCard = (_severity: string) => {
+    return "border-emerald-100 bg-emerald-50/70";
   };
 
   if (loading) {
@@ -156,17 +148,17 @@ export default function AIAnalysisPanel({
   if (error) {
     return (
       <div className="border-t border-ink-100 bg-[linear-gradient(180deg,#fbfcfb_0%,#f4f7f4_100%)] p-6">
-        <div className="rounded-[24px] border border-red-100 bg-red-50 p-4">
+        <div className="rounded-[24px] border border-emerald-100 bg-emerald-50 p-4">
           <div className="flex items-start gap-3">
-            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-red-700">
+              <p className="text-sm font-semibold text-emerald-800">
                 Gagal menganalisis menu
               </p>
-              <p className="mt-1 text-xs leading-6 text-red-600">{error}</p>
+              <p className="mt-1 text-xs leading-6 text-emerald-700">{error}</p>
               <button
                 onClick={() => runAnalysis(true)}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50"
               >
                 <RefreshCw className="h-3 w-3" />
                 Coba lagi

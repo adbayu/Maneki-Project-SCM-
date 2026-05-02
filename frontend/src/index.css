@@ -494,13 +494,13 @@
     background-color: rgba(24, 40, 31, 0.92) !important;
   }
 
-  body.night-mode .login-card .border-red-100,
+  body.night-mode .login-card .border-emerald-100,
   body.night-mode .login-card .border-forest-100 {
     border-color: rgba(148, 163, 184, 0.12) !important;
   }
 
-  body.night-mode .login-card .bg-red-50 {
-    background-color: rgba(50, 20, 20, 0.9) !important;
+  body.night-mode .login-card .bg-emerald-50 {
+    background-color: rgba(6, 78, 59, 0.9) !important;
   }
 
   .progress-fill {

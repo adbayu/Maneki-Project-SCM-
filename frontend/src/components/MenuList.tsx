@@ -12,6 +12,12 @@ import {
 } from "lucide-react";
 import type { Menu } from "../types";
 import AIAnalysisPanel from "./AIAnalysisPanel";
+import {
+  CalorieIcon,
+  ProteinIcon,
+  FatIcon,
+  CarboIcon,
+} from "./icons/NutrientIcons";
 
 const API = "http://localhost:3002/api/menu";
 
@@ -21,20 +27,46 @@ interface MenuListProps {
 }
 
 // Determine porsi tag based on calories
-function getPorsiTag(kalori: number | null | undefined): { label: string; cls: string } | null {
+function getPorsiTag(
+  kalori: number | null | undefined,
+): { label: string; cls: string } | null {
   const k = Number(kalori || 0);
   if (k <= 0) return null;
-  if (k <= 450) return { label: "Porsi Kecil", cls: "bg-sky-100 text-sky-700 border-sky-200" };
-  if (k >= 800) return { label: "Porsi Besar", cls: "bg-orange-100 text-orange-700 border-orange-200" };
-  return { label: "Porsi Sedang", cls: "bg-gray-100 text-gray-600 border-gray-200" };
+  if (k <= 450)
+    return {
+      label: "Porsi Kecil",
+      cls: "bg-sky-100 text-sky-700 border-sky-200",
+    };
+  if (k >= 800)
+    return {
+      label: "Porsi Besar",
+      cls: "bg-orange-100 text-orange-700 border-orange-200",
+    };
+  return {
+    label: "Porsi Sedang",
+    cls: "bg-gray-100 text-gray-600 border-gray-200",
+  };
 }
 
 // Mini donut chart for macro nutrients
-function MacroDonut({ protein, karbo, lemak, size = 56 }: { protein: number; karbo: number; lemak: number; size?: number }) {
+function MacroDonut({
+  protein,
+  karbo,
+  lemak,
+  size = 56,
+}: {
+  protein: number;
+  karbo: number;
+  lemak: number;
+  size?: number;
+}) {
   const total = protein + karbo + lemak;
   if (total === 0) {
     return (
-      <div style={{ width: size, height: size }} className="flex items-center justify-center rounded-full bg-gray-50 border border-gray-100">
+      <div
+        style={{ width: size, height: size }}
+        className="flex items-center justify-center rounded-full bg-gray-50 border border-gray-100"
+      >
         <span className="text-[8px] text-gray-300">N/A</span>
       </div>
     );
@@ -78,16 +110,31 @@ function MacroDonut({ protein, karbo, lemak, size = 56 }: { protein: number; kar
       </div>
       <div className="space-y-0.5">
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#10b981" }} />
-          <span className="text-[9px] text-gray-500 font-medium">P {proteinPct}%</span>
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: "#10b981" }}
+          />
+          <span className="text-[9px] text-gray-500 font-medium">
+            P {proteinPct}%
+          </span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#8b5cf6" }} />
-          <span className="text-[9px] text-gray-500 font-medium">K {karboPct}%</span>
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: "#8b5cf6" }}
+          />
+          <span className="text-[9px] text-gray-500 font-medium">
+            K {karboPct}%
+          </span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#f59e0b" }} />
-          <span className="text-[9px] text-gray-500 font-medium">L {lemakPct}%</span>
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: "#f59e0b" }}
+          />
+          <span className="text-[9px] text-gray-500 font-medium">
+            L {lemakPct}%
+          </span>
         </div>
       </div>
     </div>
@@ -135,7 +182,8 @@ export default function MenuList({ onEdit, onCreateNew }: MenuListProps) {
       (m.deskripsi && m.deskripsi.toLowerCase().includes(search.toLowerCase()));
     const matchesKategori = !filterKategori || m.kategori === filterKategori;
     const porsiTag = getPorsiTag(m.kalori);
-    const matchesPorsi = !filterPorsi || (porsiTag && porsiTag.label === filterPorsi);
+    const matchesPorsi =
+      !filterPorsi || (porsiTag && porsiTag.label === filterPorsi);
     return matchesSearch && matchesKategori && matchesPorsi;
   });
 
@@ -231,7 +279,7 @@ export default function MenuList({ onEdit, onCreateNew }: MenuListProps) {
             )}
             {filterPorsi && (
               <span className="ml-1 text-slate-400">
-                — {" "}
+                —{" "}
                 <span className="font-semibold text-blue-600">
                   {filterPorsi}
                 </span>
@@ -245,7 +293,7 @@ export default function MenuList({ onEdit, onCreateNew }: MenuListProps) {
                 setFilterKategori("");
                 setFilterPorsi("");
               }}
-              className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors"
+              className="text-xs font-semibold text-slate-400 hover:text-emerald-600 transition-colors"
             >
               Reset Filter
             </button>
@@ -341,30 +389,39 @@ export default function MenuList({ onEdit, onCreateNew }: MenuListProps) {
                         {/* Nutrition tags */}
                         <div className="flex flex-wrap gap-2">
                           {menu.kalori != null && (
-                            <span className="text-xs font-medium bg-orange-50 text-orange-600 px-2.5 py-1 rounded-lg border border-orange-100">
-                              🔥 {menu.kalori} kkal
+                            <span className="text-xs font-medium bg-orange-50 text-orange-600 px-2.5 py-1 rounded-lg border border-orange-100 inline-flex items-center gap-2">
+                              <CalorieIcon className="h-3 w-3" />
+                              {menu.kalori} kkal
                             </span>
                           )}
                           {menu.protein != null && (
-                            <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg border border-blue-100">
-                              💪 {menu.protein}g protein
+                            <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg border border-blue-100 inline-flex items-center gap-2">
+                              <ProteinIcon className="h-3 w-3" />
+                              {menu.protein}g protein
                             </span>
                           )}
                           {menu.lemak != null && (
-                            <span className="text-xs font-medium bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg border border-rose-100">
-                              🫒 {menu.lemak}g lemak
+                            <span className="text-xs font-medium bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg border border-rose-100 inline-flex items-center gap-2">
+                              <FatIcon className="h-3 w-3" />
+                              {menu.lemak}g lemak
                             </span>
                           )}
                           {menu.karbohidrat != null && (
-                            <span className="text-xs font-medium bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg border border-amber-100">
-                              🌾 {menu.karbohidrat}g karbo
+                            <span className="text-xs font-medium bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg border border-amber-100 inline-flex items-center gap-2">
+                              <CarboIcon className="h-3 w-3" />
+                              {menu.karbohidrat}g karbo
                             </span>
                           )}
                         </div>
 
                         {/* Macro Donut Chart */}
                         <div className="shrink-0 ml-auto">
-                          <MacroDonut protein={protein} karbo={karbo} lemak={lemak} size={48} />
+                          <MacroDonut
+                            protein={protein}
+                            karbo={karbo}
+                            lemak={lemak}
+                            size={48}
+                          />
                         </div>
                       </div>
                     </div>
@@ -413,7 +470,7 @@ export default function MenuList({ onEdit, onCreateNew }: MenuListProps) {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleDelete(menu.id)}
-                            className="px-3 py-2 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                            className="px-3 py-2 bg-emerald-700 text-white text-xs font-semibold rounded-lg hover:bg-emerald-800 transition-colors"
                           >
                             Ya, Hapus
                           </button>
@@ -427,7 +484,7 @@ export default function MenuList({ onEdit, onCreateNew }: MenuListProps) {
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(menu.id)}
-                          className="flex items-center space-x-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors"
+                          className="flex items-center space-x-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors"
                           title="Hapus Menu"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -442,15 +499,31 @@ export default function MenuList({ onEdit, onCreateNew }: MenuListProps) {
                   <MenuDetailExpanded menuId={menu.id} />
                 )}
 
-                {/* AI Analysis Panel */}
-                {analyzingMenuId === menu.id && (
-                  <div className="border-t border-slate-100">
-                    <AIAnalysisPanel menuId={menu.id} menuNama={menu.nama} />
-                  </div>
-                )}
+                {/* AI Analysis is now shown in modal to keep cards compact */}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* AI Analysis Modal */}
+      {analyzingMenuId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Analisis AI</h3>
+              <button
+                onClick={() => setAnalyzingMenuId(null)}
+                className="text-sm text-gray-500"
+              >
+                Tutup
+              </button>
+            </div>
+            <AIAnalysisPanel
+              menuId={analyzingMenuId}
+              menuNama={menus.find((m) => m.id === analyzingMenuId)?.nama || ""}
+            />
+          </div>
         </div>
       )}
     </div>

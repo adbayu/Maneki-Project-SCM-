@@ -325,7 +325,9 @@ export default function AILabPage() {
                     : "border-ink-100 bg-white/80"
                 }`}
               >
-                <p className="text-sm font-semibold text-ink-700">{item.label}</p>
+                <p className="text-sm font-semibold text-ink-700">
+                  {item.label}
+                </p>
                 <p className="text-xs text-ink-400">{item.sublabel}</p>
               </div>
             ))}
@@ -378,7 +380,9 @@ export default function AILabPage() {
               className="card rounded-[30px] p-6"
             >
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-sm font-medium text-ink-400">Overall Score</p>
+                <p className="text-sm font-medium text-ink-400">
+                  Overall Score
+                </p>
                 <TrendingUp className="h-4 w-4 text-forest-700" />
               </div>
               <p className="text-5xl font-black text-ink-700">
@@ -394,7 +398,9 @@ export default function AILabPage() {
               transition={{ delay: 0.05 }}
               className="rounded-[30px] bg-gradient-to-br from-forest-950 via-forest-900 to-forest-700 p-6 text-white shadow-[0_24px_52px_rgba(23,59,35,0.22)]"
             >
-              <p className="text-sm font-medium text-white/70">Nutrisi Optimal</p>
+              <p className="text-sm font-medium text-white/70">
+                Nutrisi Optimal
+              </p>
               <p className="mt-2 text-5xl font-black">
                 {optimalCount}
                 <span className="text-lg font-normal text-white/60">
@@ -411,7 +417,9 @@ export default function AILabPage() {
               transition={{ delay: 0.1 }}
               className="card rounded-[30px] p-6"
             >
-              <p className="text-sm font-medium text-ink-400">Perlu Perhatian</p>
+              <p className="text-sm font-medium text-ink-400">
+                Perlu Perhatian
+              </p>
               <p className="mt-2 text-5xl font-black text-amber-600">
                 {warningCount}
               </p>
@@ -442,7 +450,7 @@ export default function AILabPage() {
                 <span>Nilai aktual</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-3 w-3 rounded-sm border border-dashed border-red-300 bg-red-50" />
+                <div className="h-3 w-3 rounded-sm border border-dashed border-emerald-300 bg-emerald-50" />
                 <span>Batas minimum</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -462,7 +470,10 @@ export default function AILabPage() {
                   akgMin[key] || 50,
                 );
                 const barH = Math.max(12, (d.value / maxVal) * 168);
-                const minBarH = Math.max(8, ((akgMin[key] || 0) / maxVal) * 168);
+                const minBarH = Math.max(
+                  8,
+                  ((akgMin[key] || 0) / maxVal) * 168,
+                );
                 const maxBarH = Math.max(
                   8,
                   ((akgMax[key] || 100) / maxVal) * 168,
@@ -534,7 +545,11 @@ export default function AILabPage() {
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: barH }}
-                        transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+                        transition={{
+                          duration: 0.6,
+                          delay: 0.1,
+                          ease: "easeOut",
+                        }}
                         className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-[12px]"
                         style={{
                           width: "60%",
@@ -574,7 +589,9 @@ export default function AILabPage() {
                 </div>
                 <div>
                   <h4 className="font-bold text-ink-700">AI Insights</h4>
-                  <p className="text-xs text-ink-400">{analysis.standar_referensi}</p>
+                  <p className="text-xs text-ink-400">
+                    {analysis.standar_referensi}
+                  </p>
                 </div>
               </div>
               <p className="mb-4 text-sm leading-7 text-ink-500">
@@ -588,7 +605,9 @@ export default function AILabPage() {
                     ) : (
                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                     )}
-                    <p className="text-sm leading-6 text-ink-500">{rec.pesan}</p>
+                    <p className="text-sm leading-6 text-ink-500">
+                      {rec.pesan}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -668,7 +687,9 @@ export default function AILabPage() {
       ) : menus.length === 0 && !loading ? (
         <div className="card rounded-[30px] p-16 text-center">
           <Brain className="mx-auto mb-4 h-12 w-12 text-ink-200" />
-          <h3 className="mb-2 text-lg font-bold text-ink-600">Belum Ada Menu</h3>
+          <h3 className="mb-2 text-lg font-bold text-ink-600">
+            Belum Ada Menu
+          </h3>
           <p className="text-sm text-ink-400">
             Buat menu di Recipe Builder untuk memulai analisis AI.
           </p>

@@ -11,6 +11,12 @@ import {
   Image as ImageIcon,
   X,
 } from "lucide-react";
+import {
+  CalorieIcon,
+  ProteinIcon,
+  FatIcon,
+  CarboIcon,
+} from "./icons/NutrientIcons";
 import type {
   Menu,
   MenuIngredient,
@@ -385,9 +391,7 @@ export default function MenuForm({
               <ImageIcon className="h-6 w-6 text-violet-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">
-                Gambar Menu
-              </h2>
+              <h2 className="text-xl font-bold text-slate-800">Gambar Menu</h2>
               <p className="text-sm text-slate-500">
                 {isEditing
                   ? "Ganti atau tambahkan foto menu (JPG, PNG, WebP, GIF - Max 5MB)"
@@ -423,7 +427,7 @@ export default function MenuForm({
                       setImageFile(null);
                       setImagePreview(existingImage);
                     }}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-emerald-700 transition-colors"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -443,7 +447,9 @@ export default function MenuForm({
                 <div className="border-2 border-dashed border-violet-300 rounded-xl p-6 text-center hover:border-violet-500 hover:bg-violet-50 transition-all">
                   <Upload className="h-8 w-8 text-violet-500 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-slate-700">
-                    {imagePreview ? "Klik untuk mengganti gambar" : "Klik untuk upload gambar"}
+                    {imagePreview
+                      ? "Klik untuk mengganti gambar"
+                      : "Klik untuk upload gambar"}
                   </p>
                   <p className="text-xs text-slate-500">
                     JPG, PNG, WebP, GIF — Maksimal 5MB
@@ -607,7 +613,7 @@ export default function MenuForm({
                     className={`p-2.5 rounded-lg transition-colors ${
                       ingredients.length <= 1
                         ? "text-slate-300 cursor-not-allowed"
-                        : "text-red-400 hover:bg-red-50 hover:text-red-600"
+                        : "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                     }`}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -641,28 +647,28 @@ export default function MenuForm({
                 label: "Kalori",
                 unit: "kkal",
                 color: "focus:ring-orange-500",
-                icon: "🔥",
+                icon: <CalorieIcon className="h-4 w-4" />,
               },
               {
                 key: "protein" as const,
                 label: "Protein",
                 unit: "g",
                 color: "focus:ring-blue-500",
-                icon: "💪",
+                icon: <ProteinIcon className="h-4 w-4" />,
               },
               {
                 key: "lemak" as const,
                 label: "Lemak",
                 unit: "g",
                 color: "focus:ring-rose-500",
-                icon: "🫒",
+                icon: <FatIcon className="h-4 w-4" />,
               },
               {
                 key: "karbohidrat" as const,
                 label: "Karbohidrat",
                 unit: "g",
                 color: "focus:ring-amber-500",
-                icon: "🌾",
+                icon: <CarboIcon className="h-4 w-4" />,
               },
               {
                 key: "serat" as const,
@@ -702,7 +708,7 @@ export default function MenuForm({
 
         {/* Alerts */}
         {error && (
-          <div className="bg-red-50 text-red-700 p-4 rounded-xl flex items-start space-x-3 border border-red-200">
+          <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl flex items-start space-x-3 border border-emerald-200">
             <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
             <span className="text-sm font-medium">{error}</span>
           </div>

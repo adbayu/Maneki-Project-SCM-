@@ -7,14 +7,13 @@ import {
   ChefHat,
   Gauge,
   GlassWater,
-  Pencil,
-  RefreshCw,
   Search,
   Trash2,
   TrendingUp,
   Users,
   UtensilsCrossed,
 } from "lucide-react";
+import { CalorieIcon } from "../components/icons/NutrientIcons";
 import type { ManualMacronutrient, Menu, MenuStats, PageView } from "../types";
 import {
   getPorsiLabel,
@@ -23,7 +22,6 @@ import {
   loadMenuMetaMap,
   sanitizeMenuName,
   saveMenuMetaMap,
-  setEditTargetMenuId,
   type MenuMetaEntry,
   type MenuPorsi,
   type MenuType,
@@ -204,79 +202,58 @@ function getPorsiBadgeClass(porsi: MenuPorsi) {
 }
 
 function getAkgStatus(percent: number) {
+  // New green-based semantic scale per design spec
   if (percent < 70) {
     return {
       label: "Sangat Kurang",
-      badgeClass: "border border-red-200 bg-red-100 text-red-900",
-      textClass: "text-red-700",
-      ringColor: "#7f1d1d",
-      barColor: "#7f1d1d",
+      badgeClass: "border border-emerald-50 bg-emerald-50 text-emerald-700/50",
+      textClass: "text-emerald-600/60",
+      ringColor: "#dff6e8",
+      barColor: "#dff6e8",
       hint: "Jauh di bawah target harian.",
-    };
-  }
-
-  if (percent < 80) {
-    return {
-      label: "Kurang",
-      badgeClass: "border border-red-200 bg-red-50 text-red-700",
-      textClass: "text-red-700",
-      ringColor: "#ef4444",
-      barColor: "#ef4444",
-      hint: "Masih kurang dari target yang dianjurkan.",
     };
   }
 
   if (percent < 90) {
     return {
       label: "Cukup",
-      badgeClass: "border border-amber-200 bg-amber-100 text-amber-800",
-      textClass: "text-amber-700",
-      ringColor: "#f59e0b",
-      barColor: "#f59e0b",
-      hint: "Sudah mendekati target, masih bisa ditingkatkan.",
-    };
-  }
-
-  if (percent < 100) {
-    return {
-      label: "Baik",
-      badgeClass: "border border-emerald-200 bg-emerald-100 text-emerald-800",
+      badgeClass: "border border-emerald-100 bg-emerald-100 text-emerald-700",
       textClass: "text-emerald-700",
-      ringColor: "#10b981",
-      barColor: "#10b981",
-      hint: "Masih dalam zona aman dan mendekati target.",
+      ringColor: "#bbf7d0",
+      barColor: "#86efac",
+      hint: "Cukup mendekati target.",
     };
   }
 
   if (percent <= 110) {
     return {
-      label: "Sangat Baik",
-      badgeClass: "border border-emerald-300 bg-emerald-200 text-emerald-900",
+      label: "Optimal",
+      badgeClass: "border border-emerald-200 bg-emerald-100 text-emerald-800",
       textClass: "text-emerald-800",
-      ringColor: "#166534",
-      barColor: "#166534",
-      hint: "Sangat dekat dengan target dan masih aman.",
+      ringColor: "#34d399",
+      barColor: "#10b981",
+      hint: "Dalam kisaran optimal.",
     };
   }
 
   if (percent <= 120) {
     return {
-      label: "Over",
-      badgeClass: "border border-red-200 bg-red-100 text-red-800",
-      textClass: "text-red-700",
-      ringColor: "#ef4444",
-      barColor: "#ef4444",
-      hint: "Sudah melewati batas aman.",
+      label: "Mulai Berlebih",
+      badgeClass: "border border-emerald-700 bg-emerald-200 text-emerald-900",
+      textClass: "text-emerald-900",
+      ringColor: "#14532d",
+      barColor: "#166534",
+      hint: "Mulai melebihi rekomendasi.",
     };
   }
 
   return {
-    label: "Terlalu Over",
-    badgeClass: "border border-red-300 bg-red-200 text-red-950",
-    textClass: "text-red-800",
-    ringColor: "#7f1d1d",
-    barColor: "#7f1d1d",
-    hint: "Terlalu tinggi dibanding target harian.",
+    label: "Terlalu Berlebih",
+    badgeClass: "border border-emerald-900 bg-emerald-800 text-white",
+    textClass: "text-emerald-950",
+    ringColor: "#064e3b",
+    barColor: "#064e3b",
+    hint: "Signifikan melebihi target.",
   };
 }
 
@@ -368,6 +345,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
     Record<number, ManualMacronutrient[]>
   >({});
   const dragGhostRef = useRef<HTMLDivElement | null>(null);
+  const [, setShowDistributionModal] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -587,7 +565,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         return {
           ...item,
           statusLabel: "Kurang",
-          statusClass: "text-red-500",
+          statusClass: "text-emerald-400",
         };
       }
 
@@ -604,14 +582,14 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         return {
           ...item,
           statusLabel: "Cukup",
-          statusClass: "text-amber-600",
+          statusClass: "text-emerald-600",
         };
       }
 
       return {
         ...item,
         statusLabel: "Kurang",
-        statusClass: "text-red-500",
+        statusClass: "text-emerald-400",
       };
     });
   }, [piringkuMenus, plateManualMacrosMap]);
@@ -1071,7 +1049,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                   </span>
                   <button
                     onClick={() => removeMenu(m.id)}
-                    className="font-bold text-red-400 hover:text-red-600"
+                    className="font-bold text-emerald-600 hover:text-emerald-800"
                   >
                     x
                   </button>
@@ -1538,8 +1516,11 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               <span className="rounded-full border border-forest-100 bg-white px-4 py-2 text-xs font-semibold text-forest-700 shadow-sm">
                 {totalScheduledCount} menu terjadwal
               </span>
-              <button className="inline-flex items-center gap-1 rounded-full border border-forest-200 bg-white px-4 py-2 text-xs font-semibold text-forest-700 hover:bg-forest-50">
-                <RefreshCw className="h-3.5 w-3.5" /> Minggu Ini
+              <button
+                onClick={() => setShowDistributionModal(true)}
+                className="inline-flex items-center gap-1 rounded-full border border-forest-200 bg-white px-4 py-2 text-xs font-semibold text-forest-700 hover:bg-forest-50"
+              >
+                <CalendarDays className="h-3.5 w-3.5" /> Lokasi Distribusi
               </button>
             </div>
           </div>
@@ -1673,30 +1654,21 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                                     </div>
 
                                     <div className="flex items-center justify-between gap-1">
-                                      <button
-                                        onClick={() => {
-                                          setEditTargetMenuId(menu.id);
-                                          onNavigate("recipe-builder");
-                                        }}
-                                        className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200"
-                                        title="Edit menu"
-                                      >
-                                        <Pencil className="h-3.5 w-3.5" />
-                                      </button>
-
-                                      <button
-                                        onClick={() =>
-                                          removeMenuFromDay(
-                                            day.dateKey,
-                                            slot.type,
-                                            menu.id,
-                                          )
-                                        }
-                                        className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-red-100 text-red-600 hover:bg-red-200"
-                                        title="Hapus dari jadwal"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </button>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() =>
+                                            removeMenuFromDay(
+                                              day.dateKey,
+                                              slot.type,
+                                              menu.id,
+                                            )
+                                          }
+                                          className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                          title="Hapus dari jadwal"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -1711,7 +1683,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                   {isFilled && (
                     <button
                       onClick={() => clearDayPlan(day.dateKey)}
-                      className="mt-3 w-full rounded-[16px] border border-red-200 bg-red-50 px-3 py-2 text-[10px] font-bold text-red-600 hover:bg-red-100"
+                      className="mt-3 w-full rounded-[16px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100"
                     >
                       Hapus Semua Menu Hari Ini
                     </button>
@@ -1839,8 +1811,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                         <p className="truncate text-sm font-bold text-gray-800">
                           {displayName}
                         </p>
-                        <p className="mt-0.5 text-[11px] text-gray-500">
-                          Kategori {m.kategori} · {m.kalori ?? 0} kkal
+                        <p className="mt-0.5 text-[11px] text-gray-500 inline-flex items-center gap-2">
+                          Kategori {m.kategori} ·{" "}
+                          <CalorieIcon className="h-3 w-3 text-orange-600" />{" "}
+                          {m.kalori ?? 0} kkal
                         </p>
                       </div>
 
@@ -1880,26 +1854,6 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                       <p className="text-[10px] font-medium text-gray-400">
                         Seret card ini ke slot mingguan.
                       </p>
-
-                      <div className="flex rounded-lg border border-gray-200 p-0.5">
-                        {(["makanan", "minuman"] as MenuType[]).map((type) => (
-                          <button
-                            key={`${m.id}-${type}`}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setMenuType(m.id, type);
-                            }}
-                            className={`rounded-md px-2 py-1 text-[10px] font-semibold ${
-                              menuType === type
-                                ? "bg-forest-100 text-forest-700"
-                                : "text-gray-500 hover:bg-gray-50"
-                            }`}
-                          >
-                            {type === "minuman" ? "Minuman" : "Makanan"}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 </motion.div>

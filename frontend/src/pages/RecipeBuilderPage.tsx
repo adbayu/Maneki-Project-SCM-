@@ -892,7 +892,7 @@ export default function RecipeBuilderPage({
                         setImageFile(null);
                         setImagePreview(null);
                       }}
-                      className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white shadow-sm hover:bg-red-600"
+                      className="absolute -right-2 -top-2 rounded-full bg-emerald-600 p-1 text-white shadow-sm hover:bg-emerald-700"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -979,7 +979,7 @@ export default function RecipeBuilderPage({
                       type="button"
                       onClick={() => removeIng(idx)}
                       disabled={ingredients.length <= 1}
-                      className="rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50 disabled:opacity-30"
+                      className="rounded-lg p-1.5 text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-30"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -1106,7 +1106,7 @@ export default function RecipeBuilderPage({
                         <button
                           type="button"
                           onClick={() => removeManualMacro(item.rowId)}
-                          className="rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-50"
+                          className="rounded-lg p-1.5 text-emerald-600 transition-colors hover:bg-emerald-50"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -1119,16 +1119,12 @@ export default function RecipeBuilderPage({
 
             {saveMsg && (
               <div
-                className={`flex items-center gap-2 rounded-xl p-3 text-sm ${
-                  saveMsg.type === "success"
-                    ? "bg-green-50 text-green-700"
-                    : "bg-red-50 text-red-600"
-                }`}
+                className={`flex items-center gap-2 rounded-xl p-3 text-sm ${saveMsg.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-emerald-50 text-emerald-700"}`}
               >
                 {saveMsg.type === "success" ? (
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-700" />
                 ) : (
-                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-emerald-700" />
                 )}
                 {saveMsg.text}
               </div>
@@ -1271,7 +1267,7 @@ export default function RecipeBuilderPage({
             </div>
 
             {aiError && (
-              <div className="mb-3 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-600">
+              <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {aiError}
               </div>
             )}

@@ -50,7 +50,7 @@ export default function Sidebar({
             <Leaf className="h-5 w-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-base font-bold text-ink-700">MBG SCM</p>
+            <p className="truncate text-base font-bold text-ink-700">MBGflow</p>
             <p className="text-[11px] uppercase tracking-[0.18em] text-ink-400">
               Analisis Gizi & Perencanaan Menu
             </p>
@@ -90,14 +90,14 @@ export default function Sidebar({
               {user.nama || user.username}
             </p>
             <p className="truncate text-xs text-ink-400">
-              {user.role || "Operator MBG"}
+              {user.role || "Ahli Gizi"}
             </p>
           </div>
         </div>
         <button
           type="button"
           onClick={onLogout}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[18px] border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[18px] border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
         >
           <LogOut className="h-4 w-4" />
           <span>Keluar</span>

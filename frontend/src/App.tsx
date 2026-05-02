@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, MoonStar, Search, Sparkles, SunMedium } from "lucide-react";
+import { Bell, MoonStar, Search, SunMedium } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -78,10 +78,6 @@ function AppTopbar({
     <header className="glass-topbar card sticky top-3 z-20 rounded-[30px] px-4 py-4 sm:px-5 lg:px-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-forest-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-forest-800">
-            <Sparkles className="h-3.5 w-3.5" />
-            Modern MBG Workspace
-          </div>
           <div>
             <h1 className="text-[1.55rem] font-bold tracking-[-0.03em] text-ink-700">
               {meta.label}
@@ -139,7 +135,7 @@ function AppTopbar({
                   {user.nama || user.username}
                 </p>
                 <p className="text-xs uppercase tracking-[0.16em] text-ink-400">
-                  {user.role || "User"}
+                  {user.role || "Ahli Gizi"}
                 </p>
               </div>
             </div>
