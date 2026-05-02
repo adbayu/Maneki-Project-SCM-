@@ -22,8 +22,8 @@ import {
   FatIcon,
   ProteinIcon,
 } from "../components/icons/NutrientIcons";
-import pregnantImage from "../assets/images/pregnant.png";
-import studentsImage from "../assets/images/students_17359871.png";
+import pregnantImage from "../assets/images/MBG-Posyandu-akuratnews.id_.jpeg";
+import studentsImage from "../assets/images/Sekolah_Dasar.jpeg";
 import type { ManualMacronutrient, Menu, MenuStats, PageView } from "../types";
 import {
   getPorsiLabel,
@@ -39,6 +39,7 @@ import {
 
 const API = "http://localhost:3002/api/menu";
 const API_ORIGIN = "http://localhost:3002";
+const HOLIDAY_API = "https://libur.deno.dev/api";
 const WEEKLY_PLAN_STORAGE_KEY = "mbg_weekly_plan_v1";
 const WEEKLY_PLAN_BY_LOCATION_STORAGE_KEY = "mbg_weekly_plan_by_location_v1";
 const SAVED_WEEKLY_LOCATION_STORAGE_KEY = "mbg_saved_weekly_location_v1";
@@ -92,6 +93,7 @@ interface DayPlan {
 type WeeklyPlan = Record<string, DayPlan>;
 type WeeklyPlanByLocation = Record<string, WeeklyPlan>;
 type SavedScheduleMap = Record<string, string>;
+type HolidayMap = Record<string, string>;
 type MenuTypeMap = Record<number, MenuType>;
 type MenuMetaMap = Record<number, MenuMetaEntry>;
 
@@ -339,7 +341,7 @@ const DISTRIBUTION_LOCATIONS = [
   {
     id: "sdn-01-sukamaju",
     type: "sekolah",
-    recipient: "Siswa",
+    recipients: [{ label: "Siswa", target: "320 siswa" }],
     image: studentsImage,
     name: "SD Negeri 01 Sukamaju",
     target: "320 siswa",
@@ -349,7 +351,7 @@ const DISTRIBUTION_LOCATIONS = [
   {
     id: "smpn-03-sukamaju",
     type: "sekolah",
-    recipient: "Siswa",
+    recipients: [{ label: "Siswa", target: "410 siswa" }],
     image: studentsImage,
     name: "SMP Negeri 03 Sukamaju",
     target: "410 siswa",
@@ -359,44 +361,42 @@ const DISTRIBUTION_LOCATIONS = [
   {
     id: "posyandu-melati-balita",
     type: "posyandu",
-    recipient: "Balita",
-    image: studentsImage,
-    name: "Posyandu Melati",
-    target: "85 balita",
-    schedule: "Sesi timbang",
-    note: "Gunakan porsi kecil, tekstur lembut, dan gula rendah.",
-  },
-  {
-    id: "posyandu-mawar-ibu-hamil",
-    type: "posyandu",
-    recipient: "Ibu Hamil",
-    image: pregnantImage,
-    name: "Posyandu Mawar",
-    target: "62 ibu hamil",
-    schedule: "Sesi konseling",
-    note: "Perhatikan protein, zat besi, folat, dan energi cukup.",
-  },
-  {
-    id: "posyandu-mawar-balita",
-    type: "posyandu",
-    recipient: "Balita",
-    image: studentsImage,
-    name: "Posyandu Mawar",
-    target: "58 balita",
-    schedule: "Sesi PMT",
-    note: "Pastikan porsi mudah dikunyah dan tetap padat gizi.",
-  },
-  {
-    id: "posyandu-melati-ibu-hamil",
-    type: "posyandu",
-    recipient: "Ibu Hamil",
+    recipients: [
+      { label: "Balita", target: "85 balita" },
+      { label: "Ibu Hamil", target: "47 ibu hamil" },
+    ],
     image: pregnantImage,
     name: "Posyandu Melati",
-    target: "47 ibu hamil",
-    schedule: "Sesi edukasi",
-    note: "Prioritaskan lauk protein dan sayur hijau kaya mikronutrien.",
+    target: "132 penerima",
+    schedule: "Sesi timbang & edukasi",
+    note: "Balita memakai porsi kecil bertekstur lembut; ibu hamil diprioritaskan protein, folat, dan sayur hijau.",
+  },
+  {
+    id: "posyandu-mawar",
+    type: "posyandu",
+    recipients: [
+      { label: "Balita", target: "58 balita" },
+      { label: "Ibu Hamil", target: "62 ibu hamil" },
+    ],
+    image: pregnantImage,
+    name: "Posyandu Mawar",
+    target: "120 penerima",
+    schedule: "Sesi PMT & konseling",
+    note: "Balita dijaga tekstur dan energi; ibu hamil difokuskan pada protein, zat besi, dan energi cukup.",
   },
 ];
+
+function getLocationRecipientLabel(
+  location: (typeof DISTRIBUTION_LOCATIONS)[number],
+) {
+  return location.recipients.map((recipient) => recipient.label).join(" & ");
+}
+
+function getLocationTargetLabel(
+  location: (typeof DISTRIBUTION_LOCATIONS)[number],
+) {
+  return location.recipients.map((recipient) => recipient.target).join(" + ");
+}
 
 export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -404,6 +404,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [loading, setLoading] = useState(true);
   const [kelompok, setKelompok] = useState<Kelompok>("siswa");
   const [search, setSearch] = useState("");
+  const [plateMenuSearch, setPlateMenuSearch] = useState("");
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
   const [plateMenuIds, setPlateMenuIds] = useState<number[]>([]);
   const [activeLocationId, setActiveLocationId] = useState(
@@ -424,15 +425,20 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   const dragGhostRef = useRef<HTMLDivElement | null>(null);
   const [showDistributionModal, setShowDistributionModal] = useState(false);
   const [showSaveScheduleConfirm, setShowSaveScheduleConfirm] = useState(false);
+  const [showPlateMenuModal, setShowPlateMenuModal] = useState(false);
+  const [holidayMap, setHolidayMap] = useState<HolidayMap>({});
 
   const openDistributionModal = () => {
     setShowDistributionModal(true);
   };
 
   const activeLocation =
-    DISTRIBUTION_LOCATIONS.find((location) => location.id === activeLocationId) ||
-    DISTRIBUTION_LOCATIONS[0];
+    DISTRIBUTION_LOCATIONS.find(
+      (location) => location.id === activeLocationId,
+    ) || DISTRIBUTION_LOCATIONS[0];
   const weeklyPlan = weeklyPlanByLocation[activeLocationId] || {};
+  const activeLocationRecipients = getLocationRecipientLabel(activeLocation);
+  const activeLocationTargets = getLocationTargetLabel(activeLocation);
 
   useEffect(() => {
     Promise.all([
@@ -474,11 +480,40 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
+    fetch(HOLIDAY_API)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: unknown) => {
+        if (!active || !Array.isArray(data)) return;
+
+        const next: HolidayMap = {};
+        data.forEach((item) => {
+          if (!item || typeof item !== "object") return;
+          const holiday = item as { date?: unknown; name?: unknown };
+          if (typeof holiday.date !== "string") return;
+          next[holiday.date] =
+            typeof holiday.name === "string" ? holiday.name : "Hari Libur";
+        });
+        setHolidayMap(next);
+      })
+      .catch((error) => {
+        console.error("Gagal memuat tanggal merah:", error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     try {
       const savedByLocation = localStorage.getItem(
         WEEKLY_PLAN_BY_LOCATION_STORAGE_KEY,
       );
-      const savedStatus = localStorage.getItem(SAVED_WEEKLY_LOCATION_STORAGE_KEY);
+      const savedStatus = localStorage.getItem(
+        SAVED_WEEKLY_LOCATION_STORAGE_KEY,
+      );
 
       if (savedStatus) {
         const parsedStatus = JSON.parse(savedStatus);
@@ -538,6 +573,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   }, [savedScheduleMap]);
 
   const weekDays = useMemo(() => getCurrentWeekDays(new Date()), []);
+  const weekPeriod =
+    weekDays.length > 0
+      ? `${weekDays[0].dateLabel} - ${weekDays[weekDays.length - 1].dateLabel}`
+      : "";
   const menuLookup = useMemo(
     () => new Map(menus.map((menu) => [menu.id, menu])),
     [menus],
@@ -910,6 +949,19 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
     return bySearch && byType;
   });
 
+  const plateMenuOptions = useMemo(() => {
+    const q = plateMenuSearch.trim().toLowerCase();
+    if (!q) return menus;
+    return menus.filter((menu) => {
+      const cleanName = sanitizeMenuName(menu.nama).toLowerCase();
+      return (
+        cleanName.includes(q) ||
+        menu.nama.toLowerCase().includes(q) ||
+        menu.kategori.toLowerCase().includes(q)
+      );
+    });
+  }, [menus, plateMenuSearch]);
+
   const today = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     day: "numeric",
@@ -928,9 +980,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
     if (!stats) return [];
 
     const totalMenus = Number(stats.total_menus || 0);
-    const activeMenus = Number(stats.active_menus || 0);
-    const activeRatio =
-      totalMenus > 0 ? Math.round((activeMenus / totalMenus) * 100) : 0;
+    const locationCount = DISTRIBUTION_LOCATIONS.length;
+    const savedLocationCount = Object.keys(savedScheduleMap).length;
 
     return [
       {
@@ -938,36 +989,34 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         value: totalMenus,
         subtitle: "Seluruh menu tercatat",
         insight:
-          totalMenus > 0 ? "Basis variasi menu tersedia." : "Tambahkan menu pertama.",
+          totalMenus > 0
+            ? "Basis variasi menu tersedia."
+            : "Tambahkan menu pertama.",
         gradient: "from-forest-950 via-forest-900 to-forest-700",
         iconBg: "bg-white/10",
         icon: UtensilsCrossed,
         watermarkColor: "text-white/8",
       },
       {
-        title: "Menu Aktif",
-        value: activeMenus,
-        subtitle: "Siap produksi hari ini",
-        insight:
-          activeMenus >= totalMenus
-            ? "Semua menu siap digunakan."
-            : "Ada menu perlu dicek ulang.",
+        title: "Lokasi Distribusi",
+        value: locationCount,
+        subtitle: activeLocation.name,
+        insight: `${activeLocationRecipients} - ${activeLocationTargets}`,
         gradient: "from-[#ffffff] to-[#f7faf7]",
         iconBg: "bg-forest-100",
-        icon: Activity,
+        icon: Users,
         watermarkColor: "text-forest-100",
       },
       {
-        title: "Rasio Aktif",
-        value: `${activeRatio}%`,
-        subtitle: "Menu aktif vs total",
-        insight:
-          activeRatio >= 80
-            ? "Kesiapan operasional kuat."
-            : "Kesiapan menu masih bisa naik.",
+        title: "Jadwal Tersimpan",
+        value: `${savedLocationCount}/${locationCount}`,
+        subtitle: "Lokasi sudah dijadwalkan",
+        insight: activeLocationSaved
+          ? "Lokasi aktif sudah tersimpan."
+          : "Lokasi aktif belum disimpan.",
         gradient: "from-[#ffffff] to-[#f7faf7]",
         iconBg: "bg-forest-100",
-        icon: TrendingUp,
+        icon: CheckCircle2,
         watermarkColor: "text-forest-100",
       },
       {
@@ -981,7 +1030,14 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         watermarkColor: "text-forest-100",
       },
     ];
-  }, [stats]);
+  }, [
+    activeLocation.name,
+    activeLocationRecipients,
+    activeLocationSaved,
+    activeLocationTargets,
+    savedScheduleMap,
+    stats,
+  ]);
 
   const clearDragGhost = () => {
     if (dragGhostRef.current && dragGhostRef.current.parentNode) {
@@ -1181,17 +1237,19 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
           </div>
 
           <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-[1.2fr_0.8fr]">
-            <select
-              value={selectedMenuId || ""}
-              onChange={(e) => setSelectedMenuId(Number(e.target.value))}
-              className="px-4 py-3 text-sm"
+            <button
+              onClick={() => setShowPlateMenuModal(true)}
+              className="flex items-center justify-between rounded-[18px] border border-ink-100 bg-white px-4 py-3 text-left text-sm text-gray-700 shadow-sm transition hover:border-forest-200 hover:bg-forest-50"
             >
-              {menus.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {sanitizeMenuName(m.nama) || m.nama}
-                </option>
-              ))}
-            </select>
+              <span className="font-semibold">
+                {selectedMenuId
+                  ? sanitizeMenuName(
+                      menuLookup.get(selectedMenuId)?.nama || "Pilih menu",
+                    )
+                  : "Pilih menu untuk Piringku"}
+              </span>
+              <Search className="h-4 w-4 text-forest-700" />
+            </button>
             <button
               onClick={() => selectedMenuId && addMenu(selectedMenuId)}
               className="btn-primary px-4 py-3 text-sm"
@@ -1214,27 +1272,33 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               return (
                 <div
                   key={m.id}
-                  className="flex items-center gap-2 rounded-[18px] border border-ink-100 bg-white px-3 py-2 text-[11px] shadow-sm"
+                  className="flex items-center gap-3 rounded-[22px] border border-ink-100 bg-white px-3 py-2.5 text-[12px] shadow-sm"
                 >
                   {thumbUrl ? (
                     <img
                       src={thumbUrl}
                       alt={sanitizeMenuName(m.nama) || m.nama}
-                      className="h-6 w-6 rounded-md object-cover"
+                      className="h-12 w-12 rounded-2xl object-cover"
                     />
                   ) : (
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-gray-400">
-                      <ChefHat className="h-3.5 w-3.5" />
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
+                      <ChefHat className="h-5 w-5" />
                     </span>
                   )}
-                  <span className="font-medium text-gray-700">
-                    {sanitizeMenuName(m.nama) || m.nama}
-                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-gray-700">
+                      {sanitizeMenuName(m.nama) || m.nama}
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      {m.kalori ?? 0} kkal
+                    </p>
+                  </div>
                   <button
                     onClick={() => removeMenu(m.id)}
-                    className="font-bold text-emerald-600 hover:text-emerald-800"
+                    className="ml-auto flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-900"
+                    title="Hapus dari Piringku"
                   >
-                    x
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               );
@@ -1711,7 +1775,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                 <span className="font-semibold text-forest-800">
                   {activeLocation.name}
                 </span>{" "}
-                ({activeLocation.recipient}).
+                ({activeLocationRecipients}).
               </p>
             </div>
 
@@ -1731,7 +1795,9 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                 ) : (
                   <Clock3 className="h-3.5 w-3.5" />
                 )}
-                {activeLocationSaved ? "Sudah dijadwalkan" : "Belum dijadwalkan"}
+                {activeLocationSaved
+                  ? "Sudah dijadwalkan"
+                  : "Belum dijadwalkan"}
               </span>
               <button
                 onClick={() => openDistributionModal()}
@@ -1749,8 +1815,52 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             </div>
           </div>
 
+          <div className="mb-5 overflow-hidden rounded-[26px] border border-forest-100 bg-white shadow-sm">
+            <div className="relative min-h-[150px] p-5">
+              <div className="relative z-10 max-w-2xl">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/80">
+                  Lokasi Distribusi
+                </p>
+                <div className="mt-3 flex items-start gap-3">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-forest-100 bg-forest-50 text-forest-800 shadow-sm">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xl font-bold text-gray-800">
+                      {activeLocation.name}
+                    </h4>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {activeLocation.recipients.map((recipient) => (
+                        <span
+                          key={recipient.label}
+                          className="rounded-full border border-forest-100 bg-forest-50 px-3 py-1 text-xs font-semibold text-forest-800"
+                        >
+                          {recipient.label}: {recipient.target}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-gray-500">
+                      Periode {weekPeriod}. {activeLocation.note}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute inset-y-0 right-0 hidden w-[42%] overflow-hidden md:block">
+                <img
+                  src={activeLocation.image}
+                  alt={activeLocation.name}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-linear-to-r from-white via-white/72 to-white/5" />
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
             {weekDays.map((day) => {
+              const holidayName = holidayMap[day.dateKey];
+              const isHoliday = Boolean(holidayName);
               const dayPlan = normalizeDayPlan(weeklyPlan[day.dateKey]);
               const totalDayItems =
                 dayPlan.makananIds.length + dayPlan.minumanIds.length;
@@ -1760,11 +1870,13 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                 <div
                   key={day.dateKey}
                   className={`min-h-[250px] rounded-[24px] border p-3 transition-all ${
-                    day.isToday
-                      ? "border-forest-500 bg-white shadow-[0_18px_32px_rgba(46,125,50,0.10)]"
-                      : isFilled
-                        ? "border-forest-200 bg-forest-50/35"
-                        : "border-gray-200 bg-white/90"
+                    isHoliday
+                      ? "border-red-200 bg-red-50/45"
+                      : day.isToday
+                        ? "border-forest-500 bg-white shadow-[0_18px_32px_rgba(46,125,50,0.10)]"
+                        : isFilled
+                          ? "border-forest-200 bg-forest-50/35"
+                          : "border-gray-200 bg-white/90"
                   } hover:-translate-y-0.5 hover:shadow-md`}
                 >
                   <div className="mb-3 flex items-start justify-between">
@@ -1787,130 +1899,148 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                         Hari Ini
                       </span>
                     )}
+                    {isHoliday && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-[10px] font-bold text-red-700">
+                        <CalendarDays className="h-3 w-3" />
+                        Libur
+                      </span>
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    {[
-                      {
-                        type: "makanan" as MenuType,
-                        label: "Makanan",
-                        icon: UtensilsCrossed,
-                        emptyLabel: "Drop menu makanan",
-                        sectionClass: "border-emerald-200 bg-emerald-50/40",
-                      },
-                      {
-                        type: "minuman" as MenuType,
-                        label: "Minuman",
-                        icon: GlassWater,
-                        emptyLabel: "Drop menu minuman",
-                        sectionClass: "border-sky-200 bg-sky-50/40",
-                      },
-                    ].map((slot) => {
-                      const slotMenus = getMenusByDay(day.dateKey, slot.type);
-                      const dropTargetKey = `${day.dateKey}:${slot.type}`;
-                      const isDropTarget = dragOverTarget === dropTargetKey;
-                      const SlotIcon = slot.icon;
+                  {isHoliday ? (
+                    <div className="flex min-h-[176px] flex-col items-center justify-center rounded-[20px] border border-dashed border-red-200 bg-white/70 px-3 py-5 text-center">
+                      <CalendarDays className="mb-3 h-8 w-8 text-red-500" />
+                      <p className="text-sm font-black uppercase tracking-[0.08em] text-red-600">
+                        Libur
+                      </p>
+                      <p className="mt-2 text-xs leading-5 text-red-500">
+                        {holidayName}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {[
+                        {
+                          type: "makanan" as MenuType,
+                          label: "Makanan",
+                          icon: UtensilsCrossed,
+                          emptyLabel: "Drop menu makanan",
+                          sectionClass: "border-emerald-200 bg-emerald-50/40",
+                        },
+                        {
+                          type: "minuman" as MenuType,
+                          label: "Minuman",
+                          icon: GlassWater,
+                          emptyLabel: "Drop menu minuman",
+                          sectionClass: "border-sky-200 bg-sky-50/40",
+                        },
+                      ].map((slot) => {
+                        const slotMenus = getMenusByDay(day.dateKey, slot.type);
+                        const dropTargetKey = `${day.dateKey}:${slot.type}`;
+                        const isDropTarget = dragOverTarget === dropTargetKey;
+                        const SlotIcon = slot.icon;
 
-                      return (
-                        <div
-                          key={slot.type}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDragOverTarget(dropTargetKey);
-                          }}
-                          onDragLeave={() => {
-                            if (dragOverTarget === dropTargetKey) {
+                        return (
+                          <div
+                            key={slot.type}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDragOverTarget(dropTargetKey);
+                            }}
+                            onDragLeave={() => {
+                              if (dragOverTarget === dropTargetKey) {
+                                setDragOverTarget(null);
+                              }
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const menuId = Number(
+                                e.dataTransfer.getData("menu-id"),
+                              );
+                              if (menuId) {
+                                assignMenuToDay(day.dateKey, menuId, slot.type);
+                                setMenuType(menuId, slot.type);
+                              }
                               setDragOverTarget(null);
-                            }
-                          }}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const menuId = Number(
-                              e.dataTransfer.getData("menu-id"),
-                            );
-                            if (menuId) {
-                              assignMenuToDay(day.dateKey, menuId, slot.type);
-                              setMenuType(menuId, slot.type);
-                            }
-                            setDragOverTarget(null);
-                          }}
-                          className={`rounded-[18px] border px-2.5 py-2.5 transition-all ${slot.sectionClass} ${
-                            isDropTarget ? "ring-2 ring-forest-300" : ""
-                          }`}
-                        >
-                          <div className="mb-1.5 flex items-center gap-1.5">
-                            <SlotIcon className="h-3 w-3 text-gray-500" />
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-600">
-                              {slot.label}
-                            </p>
-                          </div>
+                            }}
+                            className={`rounded-[18px] border px-2.5 py-2.5 transition-all ${slot.sectionClass} ${
+                              isDropTarget ? "ring-2 ring-forest-300" : ""
+                            }`}
+                          >
+                            <div className="mb-1.5 flex items-center gap-1.5">
+                              <SlotIcon className="h-3 w-3 text-gray-500" />
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-600">
+                                {slot.label}
+                              </p>
+                            </div>
 
-                          {slotMenus.length === 0 ? (
-                            <p className="text-[10px] text-gray-400">
-                              {slot.emptyLabel}
-                            </p>
-                          ) : (
-                            <div className="space-y-1.5">
-                              {slotMenus.map((menu) => {
-                                const thumbUrl = resolveMenuImageUrl(
-                                  menu.gambar_url,
-                                );
-                                const displayName =
-                                  sanitizeMenuName(menu.nama) || menu.nama;
+                            {slotMenus.length === 0 ? (
+                              <p className="text-[10px] text-gray-400">
+                                {slot.emptyLabel}
+                              </p>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {slotMenus.map((menu) => {
+                                  const thumbUrl = resolveMenuImageUrl(
+                                    menu.gambar_url,
+                                  );
+                                  const displayName =
+                                    sanitizeMenuName(menu.nama) || menu.nama;
 
-                                return (
-                                  <div
-                                    key={`${day.dateKey}-${slot.type}-${menu.id}`}
-                                    className="rounded-[14px] border border-gray-200 bg-white p-2 shadow-sm transition hover:-translate-y-0.5 hover:border-forest-200 hover:shadow-md"
-                                  >
-                                    <div className="mb-1 flex items-center gap-1.5">
-                                      {thumbUrl ? (
-                                        <img
-                                          src={thumbUrl}
-                                          alt={displayName}
-                                          className="h-6 w-6 rounded object-cover"
-                                        />
-                                      ) : (
-                                        <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-100 text-gray-400">
-                                          <ChefHat className="h-3.5 w-3.5" />
-                                        </span>
-                                      )}
-                                      <p className="truncate text-[10px] font-semibold text-gray-700">
-                                        {displayName}
-                                      </p>
-                                    </div>
+                                  return (
+                                    <div
+                                      key={`${day.dateKey}-${slot.type}-${menu.id}`}
+                                      className="rounded-[14px] border border-gray-200 bg-white p-2 shadow-sm transition hover:-translate-y-0.5 hover:border-forest-200 hover:shadow-md"
+                                    >
+                                      <div className="mb-1 flex items-center gap-1.5">
+                                        {thumbUrl ? (
+                                          <img
+                                            src={thumbUrl}
+                                            alt={displayName}
+                                            className="h-6 w-6 rounded object-cover"
+                                          />
+                                        ) : (
+                                          <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-100 text-gray-400">
+                                            <ChefHat className="h-3.5 w-3.5" />
+                                          </span>
+                                        )}
+                                        <p className="truncate text-[10px] font-semibold text-gray-700">
+                                          {displayName}
+                                        </p>
+                                      </div>
 
-                                    <div className="flex items-center justify-between gap-1">
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            removeMenuFromDay(
-                                              day.dateKey,
-                                              slot.type,
-                                              menu.id,
-                                            );
-                                          }}
-                                          className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                                          title="Hapus dari jadwal"
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
+                                      <div className="flex items-center justify-between gap-1">
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              removeMenuFromDay(
+                                                day.dateKey,
+                                                slot.type,
+                                                menu.id,
+                                              );
+                                            }}
+                                            className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                            title="Hapus dari jadwal"
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                  {isFilled && (
+                  {!isHoliday && isFilled && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1921,22 +2051,6 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                       Hapus Semua Menu Hari Ini
                     </button>
                   )}
-
-                  <div className="mt-3 rounded-[16px] border border-forest-100 bg-white/80 px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-forest-700/75">
-                      Distribusi
-                    </p>
-                    <div className="mt-1 flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-semibold text-gray-700">
-                        {activeLocation.recipient}
-                      </span>
-                      <span className="text-[10px] text-gray-400">
-                        {activeLocation.type === "sekolah"
-                          ? "Sekolah"
-                          : "Posyandu"}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               );
             })}
@@ -1951,6 +2065,9 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
             </span>
             <span className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-gray-300" /> Hari kosong
+            </span>
+            <span className="inline-flex items-center gap-1 text-red-600">
+              <CalendarDays className="h-3.5 w-3.5" /> Libur
             </span>
           </div>
         </div>
@@ -2121,6 +2238,118 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
         </div>
       </div>
 
+      {showPlateMenuModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+          <div className="flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] bg-white shadow-xl">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/80">
+                    Pilih Menu Piringku
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-gray-800">
+                    Tambahkan Menu
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Cari menu, lihat ringkas nutrisi, lalu pilih untuk Piringku.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowPlateMenuModal(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-forest-50 hover:text-forest-800"
+                  title="Tutup"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="relative mt-4">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={plateMenuSearch}
+                  onChange={(e) => setPlateMenuSearch(e.target.value)}
+                  placeholder="Cari nama menu atau kategori"
+                  className="w-full py-3 pl-11 pr-4 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 overflow-y-auto p-5 sm:grid-cols-2">
+              {plateMenuOptions.map((menu) => {
+                const imageUrl = resolveMenuImageUrl(menu.gambar_url);
+                const displayName = sanitizeMenuName(menu.nama) || menu.nama;
+                const isSelected = selectedMenuId === menu.id;
+
+                return (
+                  <button
+                    key={menu.id}
+                    onClick={() => {
+                      setSelectedMenuId(menu.id);
+                      setShowPlateMenuModal(false);
+                    }}
+                    className={`overflow-hidden rounded-[24px] border bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-forest-200 hover:shadow-md ${
+                      isSelected
+                        ? "border-forest-400 ring-2 ring-forest-100"
+                        : "border-gray-100"
+                    }`}
+                  >
+                    <div className="relative h-32 overflow-hidden">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={displayName}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gray-50 text-gray-300">
+                          <ChefHat className="h-9 w-9" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-linear-to-t from-black/45 to-transparent" />
+                      <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-forest-800">
+                        {menu.kategori}
+                      </span>
+                    </div>
+                    <div className="p-4">
+                      <p className="truncate text-sm font-bold text-gray-800">
+                        {displayName}
+                      </p>
+                      <div className="mt-3 grid grid-cols-4 gap-2 text-[11px]">
+                        {[
+                          {
+                            label: "Kal",
+                            value: menu.kalori ?? 0,
+                            unit: "kkal",
+                          },
+                          { label: "Pro", value: menu.protein ?? 0, unit: "g" },
+                          { label: "Lem", value: menu.lemak ?? 0, unit: "g" },
+                          {
+                            label: "Kar",
+                            value: menu.karbohidrat ?? 0,
+                            unit: "g",
+                          },
+                        ].map((item) => (
+                          <div
+                            key={item.label}
+                            className="rounded-2xl bg-forest-50 px-2 py-2 text-center"
+                          >
+                            <p className="font-bold text-forest-800">
+                              {item.value}
+                            </p>
+                            <p className="mt-0.5 text-[9px] text-gray-500">
+                              {item.label} {item.unit}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showDistributionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
           <div className="w-full max-w-4xl rounded-[28px] bg-white p-5 shadow-xl">
@@ -2183,69 +2412,74 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                 const isScheduled = Boolean(savedScheduleMap[location.id]);
 
                 return (
-                <div
-                  key={location.id}
-                  onClick={() => selectDistributionLocation(location.id)}
-                  className={`cursor-pointer overflow-hidden rounded-[22px] border bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-forest-200 hover:shadow-md ${
-                    isSelected ? "border-forest-400 ring-2 ring-forest-100" : "border-gray-100"
-                  }`}
-                >
-                  <div className="relative h-28 overflow-hidden bg-[linear-gradient(180deg,#edf2ed_0%,#f7f9f7_100%)]">
-                    {location.image ? (
-                      <img
-                        src={location.image}
-                        alt={location.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-gray-300">
-                        <ChefHat className="h-10 w-10" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-linear-to-t from-black/35 via-black/5 to-transparent" />
-                    <div className="absolute bottom-2 left-3 flex flex-wrap gap-1.5">
-                      <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-forest-800">
-                        {location.type === "sekolah" ? "Sekolah" : "Posyandu"}
-                      </span>
-                      <span className="rounded-full bg-forest-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                        {location.recipient}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 p-4">
-                    <div>
-                      <p className="truncate text-sm font-bold text-gray-800">
-                        {location.name}
-                      </p>
-                      <p className="mt-1 text-xs font-semibold text-forest-700">
-                        {location.target} • {location.schedule}
-                      </p>
-                    </div>
-                    <div
-                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${
-                        isScheduled
-                          ? "border-forest-200 bg-forest-50 text-forest-800"
-                          : "border-gray-200 bg-white text-gray-500"
-                      }`}
-                    >
-                      {isScheduled ? (
-                        <CheckCircle2 className="h-3 w-3" />
+                  <div
+                    key={location.id}
+                    onClick={() => selectDistributionLocation(location.id)}
+                    className={`cursor-pointer overflow-hidden rounded-[22px] border bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-forest-200 hover:shadow-md ${
+                      isSelected
+                        ? "border-forest-400 ring-2 ring-forest-100"
+                        : "border-gray-100"
+                    }`}
+                  >
+                    <div className="relative h-28 overflow-hidden bg-[linear-gradient(180deg,#edf2ed_0%,#f7f9f7_100%)]">
+                      {location.image ? (
+                        <img
+                          src={location.image}
+                          alt={location.name}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
-                        <Clock3 className="h-3 w-3" />
+                        <div className="flex h-full w-full items-center justify-center text-gray-300">
+                          <ChefHat className="h-10 w-10" />
+                        </div>
                       )}
-                      {isScheduled ? "Sudah dijadwalkan" : "Belum dijadwalkan"}
+                      <div className="absolute inset-0 bg-linear-to-t from-black/35 via-black/5 to-transparent" />
+                      <div className="absolute bottom-2 left-3 flex flex-wrap gap-1.5">
+                        <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-forest-800">
+                          {location.type === "sekolah" ? "Sekolah" : "Posyandu"}
+                        </span>
+                        <span className="rounded-full bg-forest-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                          {getLocationRecipientLabel(location)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="rounded-[16px] border border-forest-100 bg-forest-50/70 px-3 py-2">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-forest-700/75">
-                        Catatan
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-gray-600">
-                        {location.note}
-                      </p>
+
+                    <div className="space-y-3 p-4">
+                      <div>
+                        <p className="truncate text-sm font-bold text-gray-800">
+                          {location.name}
+                        </p>
+                        <p className="mt-1 text-xs font-semibold text-forest-700">
+                          {getLocationTargetLabel(location)} •{" "}
+                          {location.schedule}
+                        </p>
+                      </div>
+                      <div
+                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${
+                          isScheduled
+                            ? "border-forest-200 bg-forest-50 text-forest-800"
+                            : "border-gray-200 bg-white text-gray-500"
+                        }`}
+                      >
+                        {isScheduled ? (
+                          <CheckCircle2 className="h-3 w-3" />
+                        ) : (
+                          <Clock3 className="h-3 w-3" />
+                        )}
+                        {isScheduled
+                          ? "Sudah dijadwalkan"
+                          : "Belum dijadwalkan"}
+                      </div>
+                      <div className="rounded-[16px] border border-forest-100 bg-forest-50/70 px-3 py-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-forest-700/75">
+                          Catatan
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-gray-600">
+                          {location.note}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
                 );
               })}
             </div>
@@ -2272,7 +2506,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
 
             <div className="rounded-[18px] border border-forest-100 bg-forest-50/70 px-4 py-3">
               <p className="text-xs font-semibold text-forest-800">
-                {activeLocation.name} • {activeLocation.recipient}
+                {activeLocation.name} • {activeLocationRecipients}
               </p>
             </div>
 

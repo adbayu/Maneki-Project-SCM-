@@ -311,9 +311,9 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
                 key={menu.id}
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.2 }}
-                className="card card-hover overflow-hidden rounded-[30px]"
+                className="card card-hover overflow-hidden rounded-[30px] border border-forest-100/70 bg-white"
               >
-                <div className="relative h-40 overflow-hidden">
+                <div className="relative h-52 overflow-hidden">
                   {imageUrl ? (
                     <img
                       src={imageUrl}
@@ -325,7 +325,7 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
                       <ChefHat className="h-10 w-10" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/35 via-black/5 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent" />
 
                   <div className="absolute bottom-3 left-3 flex flex-wrap gap-1.5">
                     <span
@@ -365,7 +365,7 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
                     />
                   </div>
 
-                  <div className="surface-muted rounded-[20px] px-3 py-3 text-[12px] font-semibold">
+                  <div className="surface-muted rounded-[20px] px-4 py-3 text-[12px] font-semibold">
                     {hasAnalysis ? (
                       <span className="text-emerald-700">
                         Analisis AI tersimpan
@@ -375,7 +375,7 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2.5">
                     {[
                       {
                         label: "Protein",
@@ -398,10 +398,12 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
                     ].map((n) => (
                       <div
                         key={n.label}
-                        className="rounded-[18px] border border-ink-100 bg-white/80 p-3"
+                        className="rounded-[20px] border border-ink-100 bg-white p-3 shadow-sm"
                       >
-                        <div className="mb-1 flex items-center justify-between text-[10px] text-ink-400">
-                          <span>{n.short}</span>
+                        <div className="mb-2 flex items-center justify-between text-[11px] text-ink-400">
+                          <span className="font-bold text-ink-500">
+                            {n.short}
+                          </span>
                           <span>{n.value}g</span>
                         </div>
                         <div className="h-1.5 overflow-hidden rounded-full bg-ink-100">
