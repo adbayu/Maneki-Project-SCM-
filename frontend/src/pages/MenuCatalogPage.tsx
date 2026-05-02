@@ -504,21 +504,35 @@ export default function MenuCatalogPage({ onNavigate }: MenuCatalogPageProps) {
       {/* AI Analysis Modal */}
       {analyzingId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold">Analisis AI</h3>
+          <div className="flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-lg">
+            <div className="border-b border-gray-100 px-6 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/80">
+                    AI Nutrient Insight
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-gray-800">
+                    Analisis AI
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Ringkasan singkat, detail nutrisi, dan rekomendasi tindakan.
+                  </p>
+                </div>
               <button
                 onClick={() => setAnalyzingId(null)}
-                className="text-sm text-gray-500"
+                className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-forest-50 hover:text-forest-800"
               >
                 Tutup
               </button>
+              </div>
             </div>
-            <AIAnalysisPanel
-              menuId={analyzingId}
-              menuNama={menus.find((m) => m.id === analyzingId)?.nama || ""}
-              onAnalysisSaved={() => setAnalysisVersion((v) => v + 1)}
-            />
+            <div className="overflow-y-auto">
+              <AIAnalysisPanel
+                menuId={analyzingId}
+                menuNama={menus.find((m) => m.id === analyzingId)?.nama || ""}
+                onAnalysisSaved={() => setAnalysisVersion((v) => v + 1)}
+              />
+            </div>
           </div>
         </div>
       )}

@@ -230,7 +230,9 @@ ATURAN PENGISIAN:
 - Jika semua nutrisi optimal, berikan tepat 1 rekomendasi dengan severity "success".
 - Rekomendasi harus menyebutkan nama bahan makanan Indonesia yang konkret (misal: tempe, tahu, ikan lele, kangkung, bayam, ubi, singkong, dll).
 - Setiap rekomendasi harus berkaitan dengan satu masalah gizi spesifik.
-- Maksimal 6 rekomendasi.
+- Prioritaskan 3-4 rekomendasi paling penting; maksimal 6 jika isu memang banyak.
+- Tiap rekomendasi harus singkat, kritis, dan langsung bisa dilakukan dapur produksi.
+- Jelaskan dampak praktisnya: tambah, kurangi, atau ganti bahan/porsi.
 - Gunakan bahasa Indonesia yang natural, jelas, dan mudah dipahami masyarakat umum.
 - Jangan tambahkan teks, catatan, atau penjelasan di luar JSON.`;
 }
@@ -355,50 +357,50 @@ const FALLBACK_RULES = {
   makanan: {
     Kalori: {
       rendah:
-        "Kalori terlalu rendah. Tambahkan lauk pauk bergizi atau sumber kalori sehat seperti nasi merah atau ubi.",
+        "Energi masih rendah. Tambahkan porsi sumber karbohidrat padat gizi seperti nasi, jagung, ubi, atau singkong sesuai sasaran penerima.",
       berlebih:
-        "Kalori terlalu tinggi. Kurangi porsi nasi atau ganti bahan tinggi kalori dengan sayuran segar.",
+        "Energi terlalu tinggi. Kurangi porsi nasi atau bahan tinggi minyak, lalu tambah sayuran agar volume tetap cukup.",
     },
     Protein: {
       rendah:
-        "Protein terlalu rendah. Tambahkan tempe, tahu, ikan, atau telur rebus sebagai sumber protein terjangkau.",
+        "Protein belum cukup. Tambahkan tempe, tahu, telur, ikan lele, atau ayam agar lauk lebih mendukung pertumbuhan.",
       berlebih:
-        "Protein berlebih. Seimbangkan dengan memperbanyak sayuran dan mengurangi porsi lauk hewani.",
+        "Protein melewati kebutuhan porsi ini. Kurangi lauk hewani sedikit dan seimbangkan dengan sayur serta karbohidrat kompleks.",
     },
     Lemak: {
       rendah:
-        "Lemak terlalu rendah. Tambahkan sedikit minyak kelapa atau alpukat sebagai sumber lemak sehat.",
+        "Lemak masih rendah. Tambahkan lemak sehat secukupnya dari telur, ikan, alpukat, atau minyak dalam takaran kecil.",
       berlebih:
-        "Lemak terlalu tinggi. Kurangi penggunaan santan atau minyak goreng; coba metode kukus atau rebus.",
+        "Lemak terlalu tinggi. Kurangi santan/minyak goreng dan pilih metode kukus, rebus, atau tumis ringan.",
     },
     Karbohidrat: {
       rendah:
-        "Karbohidrat rendah. Tambahkan nasi, jagung, singkong, atau kentang untuk mencukupi kebutuhan energi.",
+        "Karbohidrat masih rendah. Tambahkan nasi, jagung, singkong, kentang, atau ubi agar energi lebih stabil.",
       berlebih:
-        "Karbohidrat berlebih. Kurangi porsi nasi dan ganti sebagian dengan sayuran hijau yang kaya serat.",
+        "Karbohidrat berlebih. Kurangi porsi nasi dan ganti sebagian volume dengan sayuran hijau kaya serat.",
     },
     Serat: {
       rendah:
-        "Serat sangat rendah. Tambahkan sayuran seperti bayam, kangkung, atau kacang panjang untuk meningkatkan serat.",
+        "Serat masih rendah. Tambahkan bayam, kangkung, wortel, buncis, atau kacang panjang agar pencernaan lebih terbantu.",
       berlebih:
         "Kandungan serat sangat tinggi dan mendukung kesehatan pencernaan. Pertahankan!",
     },
     Gula: {
       rendah: null,
       berlebih:
-        "Kandungan gula terlalu tinggi. Kurangi penggunaan gula pasir dan kecap manis; manfaatkan rempah alami sebagai pengganti rasa.",
+        "Gula terlalu tinggi. Kurangi gula pasir, sirup, atau kecap manis; gunakan buah atau rempah untuk rasa alami.",
     },
   },
   minuman: {
     Kalori: {
       rendah:
-        "Kalori minuman terlalu rendah. Tambahkan bahan bernutrisi seperti susu UHT, oat, atau pisang agar energi lebih cukup.",
+        "Energi minuman masih rendah. Tambahkan susu UHT, oat, pisang, atau kacang hijau agar lebih mengenyangkan.",
       berlebih:
-        "Kalori minuman terlalu tinggi. Kurangi pemanis dan bahan berkalori padat, lalu tingkatkan proporsi air atau es batu.",
+        "Energi minuman terlalu tinggi. Kurangi pemanis dan bahan padat kalori, lalu sesuaikan volume cairan.",
     },
     Protein: {
       rendah:
-        "Protein minuman rendah. Tambahkan susu, yoghurt plain, atau kedelai untuk meningkatkan kandungan protein.",
+        "Protein minuman rendah. Tambahkan susu, yoghurt plain, atau kedelai agar kontribusi proteinnya lebih terasa.",
       berlebih:
         "Protein minuman terlalu tinggi untuk porsi ini. Seimbangkan dengan mengurangi konsentrat protein dan menambah cairan.",
     },
@@ -423,7 +425,7 @@ const FALLBACK_RULES = {
     Gula: {
       rendah: null,
       berlebih:
-        "Gula minuman terlalu tinggi. Kurangi gula pasir/sirup dan prioritaskan rasa manis alami dari buah.",
+        "Gula minuman terlalu tinggi. Kurangi gula pasir/sirup dan prioritaskan rasa manis alami dari buah utuh.",
     },
   },
 };

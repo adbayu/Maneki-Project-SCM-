@@ -139,8 +139,12 @@
   }
 
   body.night-mode .card {
-    background: rgba(14, 22, 18, 0.92);
-    border-color: rgba(148, 163, 184, 0.14);
+    background: linear-gradient(
+      180deg,
+      rgba(18, 30, 23, 0.96),
+      rgba(12, 22, 17, 0.94)
+    );
+    border-color: rgba(129, 199, 132, 0.16);
     box-shadow:
       0 20px 44px rgba(0, 0, 0, 0.3),
       0 2px 4px rgba(0, 0, 0, 0.16);
@@ -394,14 +398,41 @@
   body.night-mode .text-ink-400,
   body.night-mode .text-gray-500,
   body.night-mode .text-gray-400 {
-    color: #97a89b !important;
+    color: #b2c3b7 !important;
   }
 
   body.night-mode .bg-white,
   body.night-mode .bg-white\/90,
   body.night-mode .bg-white\/92,
   body.night-mode .bg-white\/84 {
-    background-color: rgba(14, 22, 18, 0.92) !important;
+    background-color: rgba(17, 29, 22, 0.94) !important;
+  }
+
+  body.night-mode .surface-muted,
+  body.night-mode .bg-slate-50,
+  body.night-mode .bg-gray-50 {
+    background: linear-gradient(
+      180deg,
+      rgba(21, 36, 27, 0.95),
+      rgba(14, 24, 19, 0.95)
+    ) !important;
+    border-color: rgba(129, 199, 132, 0.14) !important;
+  }
+
+  body.night-mode .text-slate-800,
+  body.night-mode .text-slate-900 {
+    color: #eef7ef !important;
+  }
+
+  body.night-mode .text-slate-700,
+  body.night-mode .text-slate-600,
+  body.night-mode .text-slate-500 {
+    color: #b8c9bd !important;
+  }
+
+  body.night-mode .border-slate-200,
+  body.night-mode .border-slate-100 {
+    border-color: rgba(129, 199, 132, 0.14) !important;
   }
 
   body.night-mode .bg-forest-25,

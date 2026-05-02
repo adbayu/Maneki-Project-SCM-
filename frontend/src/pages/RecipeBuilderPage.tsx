@@ -16,6 +16,7 @@ import {
   Image as ImageIcon,
   Loader2,
   Plus,
+  Search,
   Trash2,
   AlertTriangle,
   Upload,
@@ -94,6 +95,17 @@ interface ManualMacroFormRow extends ManualMacronutrient {
   rowId: string;
 }
 
+const MANUAL_MACRO_OPTIONS = [
+  { nama: "Omega-3", satuan: "g", note: "Lemak sehat dari ikan, telur, atau biji-bijian." },
+  { nama: "Zat Besi", satuan: "mg", note: "Penting untuk ibu hamil dan pencegahan anemia." },
+  { nama: "Kalsium", satuan: "mg", note: "Dukung tulang dan pertumbuhan anak." },
+  { nama: "Vitamin A", satuan: "mcg", note: "Baik untuk imunitas dan kesehatan mata." },
+  { nama: "Vitamin C", satuan: "mg", note: "Bantu penyerapan zat besi dan daya tahan." },
+  { nama: "Natrium", satuan: "mg", note: "Pantau agar rasa tetap aman dan tidak berlebih." },
+  { nama: "Kolesterol", satuan: "mg", note: "Berguna untuk menu tinggi lauk hewani." },
+  { nama: "Folat", satuan: "mcg", note: "Relevan untuk ibu hamil dan sayuran hijau." },
+];
+
 const emptyIng: MenuIngredient = {
   nama_bahan: "",
   jumlah: 0,
@@ -171,6 +183,8 @@ export default function RecipeBuilderPage({
   ]);
   const [nutrition, setNutrition] = useState<MenuNutrition>({ ...emptyNut });
   const [manualMacros, setManualMacros] = useState<ManualMacroFormRow[]>([]);
+  const [macroPickerRowId, setMacroPickerRowId] = useState<string | null>(null);
+  const [macroSearch, setMacroSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{
     type: "success" | "error";
@@ -420,6 +434,29 @@ export default function RecipeBuilderPage({
         item.rowId === rowId ? { ...item, [field]: value } : item,
       ),
     );
+  };
+
+  const filteredMacroOptions = useMemo(() => {
+    const q = macroSearch.trim().toLowerCase();
+    if (!q) return MANUAL_MACRO_OPTIONS;
+    return MANUAL_MACRO_OPTIONS.filter(
+      (item) =>
+        item.nama.toLowerCase().includes(q) ||
+        item.note.toLowerCase().includes(q) ||
+        item.satuan.toLowerCase().includes(q),
+    );
+  }, [macroSearch]);
+
+  const selectManualMacro = (rowId: string, option: (typeof MANUAL_MACRO_OPTIONS)[number]) => {
+    setManualMacros((prev) =>
+      prev.map((item) =>
+        item.rowId === rowId
+          ? { ...item, nama: option.nama, satuan: option.satuan }
+          : item,
+      ),
+    );
+    setMacroPickerRowId(null);
+    setMacroSearch("");
   };
 
   const handleImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
@@ -1062,19 +1099,16 @@ export default function RecipeBuilderPage({
                         className="grid items-center gap-2"
                         style={{ gridTemplateColumns: "1fr 110px 90px 32px" }}
                       >
-                        <input
-                          type="text"
-                          value={item.nama}
-                          onChange={(e) =>
-                            updateManualMacro(
-                              item.rowId,
-                              "nama",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Contoh: Omega-3"
-                          className="rounded-[14px] px-3 py-2.5 text-sm"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMacroPickerRowId(item.rowId);
+                            setMacroSearch(item.nama);
+                          }}
+                          className="rounded-[14px] border border-slate-200 bg-white px-3 py-2.5 text-left text-sm text-gray-700 transition hover:border-forest-200 hover:bg-forest-50"
+                        >
+                          {item.nama || "Pilih makronutrien"}
+                        </button>
                         <input
                           type="number"
                           value={item.nilai || ""}
@@ -1380,6 +1414,71 @@ export default function RecipeBuilderPage({
           )}
         </div>
       </div>
+
+      {macroPickerRowId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+          <div className="w-full max-w-lg rounded-[26px] bg-white p-5 shadow-xl">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/80">
+                  Pilih Makronutrien
+                </p>
+                <h3 className="mt-1 text-lg font-bold text-gray-800">
+                  Makronutrien Manual
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-gray-500">
+                  Cari lalu pilih nutrien tambahan yang paling relevan.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMacroPickerRowId(null);
+                  setMacroSearch("");
+                }}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-forest-50 hover:text-forest-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="relative mb-3">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                value={macroSearch}
+                onChange={(e) => setMacroSearch(e.target.value)}
+                placeholder="Cari Omega-3, zat besi, kalsium..."
+                className="w-full py-3 pl-10 pr-4 text-sm"
+              />
+            </div>
+
+            <div className="max-h-[46vh] space-y-2 overflow-y-auto pr-1">
+              {filteredMacroOptions.map((option) => (
+                <button
+                  key={option.nama}
+                  type="button"
+                  onClick={() => selectManualMacro(macroPickerRowId, option)}
+                  className="w-full rounded-[18px] border border-gray-100 bg-white p-3 text-left transition hover:-translate-y-0.5 hover:border-forest-200 hover:bg-forest-50 hover:shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">
+                        {option.nama}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-gray-500">
+                        {option.note}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-forest-100 px-2.5 py-1 text-[10px] font-bold text-forest-800">
+                      {option.satuan}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
