@@ -15,7 +15,7 @@ import {
   Users,
   UtensilsCrossed,
 } from "lucide-react";
-import type { Menu, MenuStats, PageView } from "../types";
+import type { ManualMacronutrient, Menu, MenuStats, PageView } from "../types";
 import {
   getPorsiLabel,
   inferMenuPorsi,
@@ -90,65 +90,30 @@ interface WeekDay {
   isToday: boolean;
 }
 
-type MicroNutrientKey = "serat" | "gula" | "vitamin" | "kalsium" | "zat_besi";
+const MANUAL_NUTRIENT_COLORS = [
+  "#0ea5e9",
+  "#6366f1",
+  "#22c55e",
+  "#f97316",
+  "#14b8a6",
+  "#eab308",
+  "#06b6d4",
+  "#f43f5e",
+];
 
-interface MicroNutrientFieldConfig {
-  key: MicroNutrientKey;
-  abbr: string;
-  label: string;
-  unit: string;
-  target: number;
-  color: string;
-  helper: string;
+function normalizeNutrientName(name: string) {
+  return name.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 }
 
-const MICRO_NUTRIENT_FIELDS: MicroNutrientFieldConfig[] = [
-  {
-    key: "serat",
-    abbr: "Sr",
-    label: "Serat",
-    unit: "g",
-    target: 20,
-    color: "#10b981",
-    helper: "Bantu pencernaan dan rasa kenyang.",
-  },
-  {
-    key: "gula",
-    abbr: "Gl",
-    label: "Gula",
-    unit: "g",
-    target: 25,
-    color: "#f59e0b",
-    helper: "Jaga agar tetap terkontrol.",
-  },
-  {
-    key: "vitamin",
-    abbr: "Vi",
-    label: "Vitamin",
-    unit: "%",
-    target: 100,
-    color: "#8b5cf6",
-    helper: "Isi persen kecukupan bila sudah dihitung.",
-  },
-  {
-    key: "kalsium",
-    abbr: "Ca",
-    label: "Kalsium",
-    unit: "mg",
-    target: 650,
-    color: "#14b8a6",
-    helper: "Penting untuk tulang dan gigi.",
-  },
-  {
-    key: "zat_besi",
-    abbr: "Fe",
-    label: "Zat Besi",
-    unit: "mg",
-    target: 10,
-    color: "#ef4444",
-    helper: "Mendukung energi dan darah.",
-  },
-];
+function toShortLabel(name: string) {
+  const compact = name.trim();
+  if (!compact) return "Nt";
+  const words = compact.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase();
+  }
+  return compact.slice(0, 2).toUpperCase();
+}
 
 function createEmptyDayPlan(): DayPlan {
   return { makananIds: [], minumanIds: [] };
@@ -315,32 +280,6 @@ function getAkgStatus(percent: number) {
   };
 }
 
-function getNutritionStatus(v: number, t: number) {
-  const ratio = t > 0 ? v / t : 0;
-
-  if (ratio >= 1) {
-    return {
-      label: "Baik",
-      badgeClass: "bg-emerald-100 text-emerald-700",
-      ratio,
-    };
-  }
-
-  if (ratio >= 0.8) {
-    return {
-      label: "Cukup",
-      badgeClass: "bg-amber-100 text-amber-700",
-      ratio,
-    };
-  }
-
-  return {
-    label: "Kurang",
-    badgeClass: "bg-red-100 text-red-600",
-    ratio,
-  };
-}
-
 function MiniDonut({
   protein,
   karbo,
@@ -425,6 +364,9 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [menuTypeFilter, setMenuTypeFilter] = useState<"all" | MenuType>("all");
   const [draggingMenuId, setDraggingMenuId] = useState<number | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
+  const [plateManualMacrosMap, setPlateManualMacrosMap] = useState<
+    Record<number, ManualMacronutrient[]>
+  >({});
   const dragGhostRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -527,6 +469,41 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
     [menus, plateMenuIds],
   );
 
+  useEffect(() => {
+    const missingIds = plateMenuIds.filter((id) => !plateManualMacrosMap[id]);
+    if (missingIds.length === 0) return;
+
+    let active = true;
+
+    Promise.all(
+      missingIds.map((menuId) =>
+        fetch(`${API}/${menuId}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => ({
+            menuId,
+            manual: Array.isArray(data?.manual_macronutrients)
+              ? (data.manual_macronutrients as ManualMacronutrient[])
+              : [],
+          }))
+          .catch(() => ({ menuId, manual: [] as ManualMacronutrient[] })),
+      ),
+    ).then((results) => {
+      if (!active) return;
+
+      setPlateManualMacrosMap((prev) => {
+        const next = { ...prev };
+        results.forEach((item) => {
+          next[item.menuId] = item.manual;
+        });
+        return next;
+      });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [plateManualMacrosMap, plateMenuIds]);
+
   const plateNutrition = useMemo(
     () =>
       piringkuMenus.reduce(
@@ -542,50 +519,102 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
     [piringkuMenus],
   );
 
-  const plateMicroNutrition = useMemo(
-    () =>
-      piringkuMenus.reduce(
-        (acc, menu) => {
-          acc.serat += Number(menu.serat ?? menu.nutrition?.serat ?? 0);
-          acc.gula += Number(menu.gula ?? menu.nutrition?.gula ?? 0);
-          acc.vitamin += Number(menu.nutrition?.vitamins ?? 0);
-          return acc;
-        },
-        { serat: 0, gula: 0, vitamin: 0 },
-      ),
-    [piringkuMenus],
-  );
-
   const plateAkgPercent = Math.max(
     0,
     Math.round((plateNutrition.kalori / STANDAR[kelompok].kalori) * 100),
   );
   const plateAkgStatus = getAkgStatus(plateAkgPercent);
 
-  const microStatus = useMemo(
-    () =>
-      MICRO_NUTRIENT_FIELDS.map((field) => {
-        const displayValue =
-          field.key === "serat"
-            ? plateMicroNutrition.serat
-            : field.key === "gula"
-              ? plateMicroNutrition.gula
-              : field.key === "vitamin"
-                ? plateMicroNutrition.vitamin
-                : 0;
+  const microStatus = useMemo(() => {
+    const dynamicMap: Record<
+      string,
+      {
+        key: string;
+        abbr: string;
+        label: string;
+        unit: string;
+        color: string;
+        value: number;
+        statusLabel: string;
+        statusClass: string;
+      }
+    > = {};
 
+    let paletteIndex = 0;
+
+    piringkuMenus.forEach((menu) => {
+      const manualList =
+        plateManualMacrosMap[menu.id] || menu.manual_macronutrients || [];
+
+      manualList.forEach((macro) => {
+        const normalized = normalizeNutrientName(macro.nama || "");
+        if (!normalized) return;
+
+        const numericValue = Number(macro.nilai || 0);
+        if (!Number.isFinite(numericValue)) return;
+
+        if (!dynamicMap[normalized]) {
+          const color =
+            MANUAL_NUTRIENT_COLORS[
+              paletteIndex % MANUAL_NUTRIENT_COLORS.length
+            ];
+          paletteIndex += 1;
+
+          dynamicMap[normalized] = {
+            key: `manual-${normalized.replace(/\s+/g, "-")}`,
+            abbr: toShortLabel(macro.nama || "Nutrien"),
+            label: macro.nama || "Nutrien Tambahan",
+            unit: macro.satuan || "g",
+            color,
+            value: 0,
+            statusLabel: "Baik",
+            statusClass: "text-emerald-600",
+          };
+        }
+
+        dynamicMap[normalized].value += numericValue;
+      });
+    });
+
+    const dynamicFields = Object.values(dynamicMap);
+    const maxValue = dynamicFields.reduce(
+      (max, item) => Math.max(max, item.value),
+      0,
+    );
+
+    return dynamicFields.map((item) => {
+      if (item.value <= 0 || maxValue <= 0) {
         return {
-          ...field,
-          value: displayValue,
-          status: getNutritionStatus(displayValue, field.target),
+          ...item,
+          statusLabel: "Kurang",
+          statusClass: "text-red-500",
         };
-      }),
-    [
-      plateMicroNutrition.gula,
-      plateMicroNutrition.serat,
-      plateMicroNutrition.vitamin,
-    ],
-  );
+      }
+
+      const ratio = item.value / maxValue;
+      if (ratio >= 0.8) {
+        return {
+          ...item,
+          statusLabel: "Baik",
+          statusClass: "text-emerald-600",
+        };
+      }
+
+      if (ratio >= 0.5) {
+        return {
+          ...item,
+          statusLabel: "Cukup",
+          statusClass: "text-amber-600",
+        };
+      }
+
+      return {
+        ...item,
+        statusLabel: "Kurang",
+        statusClass: "text-red-500",
+      };
+    });
+  }, [piringkuMenus, plateManualMacrosMap]);
 
   const plateNote =
     plateAkgStatus.label === "Sangat Baik" || plateAkgStatus.label === "Baik"
@@ -1285,7 +1314,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-4 shadow-sm mb-5">
+                <div className="mt-4 rounded-2xl border border-forest-100 bg-white px-4 py-3 mb-5">
                   <div className="mb-3 flex items-center gap-2">
                     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
                       <Activity className="h-4 w-4" />
@@ -1301,7 +1330,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-forest-100 bg-forest-50/70 p-4 shadow-sm">
+                <div className="mt-4 rounded-2xl border border-forest-100 bg-white px-4 py-3 mb-5">
                   <div className="mb-3 flex items-center gap-2 text-forest-800">
                     <TrendingUp className="h-4 w-4" />
                     <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
@@ -1321,88 +1350,55 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-forest-700/80">
-                    Mikronutrien Penting
+                    Makronutrien
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                {microStatus.map((field) => {
-                  const shownValue = Math.round(field.value);
-                  const percent =
-                    field.target > 0
-                      ? Math.min(
-                          100,
-                          Math.round((field.value / field.target) * 100),
-                        )
-                      : 0;
+              {microStatus.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                  Belum ada makronutrien manual pada menu yang sedang ada di
+                  Piringku.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  {microStatus.map((field) => {
+                    const shownValue = Math.round(field.value * 10) / 10;
 
-                  return (
-                    <div
-                      key={field.key}
-                      className="rounded-2xl border bg-linear-to-b from-gray-50 to-white p-3 shadow-sm"
-                      style={{ borderColor: `${field.color}33` }}
-                    >
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                    return (
+                      <div
+                        key={field.key}
+                        className="rounded-2xl border bg-white p-3 shadow-sm"
+                        style={{ borderColor: `${field.color}30` }}
+                      >
+                        <div className="mb-2 flex items-center gap-2">
                           <div
-                            className="flex h-8 w-8 items-center justify-center rounded-xl"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg"
                             style={{
                               backgroundColor: `${field.color}18`,
                               color: field.color,
                             }}
                           >
-                            <span className="text-[10px] font-black uppercase">
+                            <span className="text-[9px] font-black uppercase">
                               {field.abbr}
                             </span>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-700">
-                              {field.label}
-                            </p>
-                            <p className="text-[10px] text-gray-400">
-                              {field.helper}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={`rounded-full px-2 py-1 text-[10px] font-bold ${field.status.badgeClass}`}
-                        >
-                          {field.status.label}
-                        </span>
-                      </div>
-
-                      <div className="flex items-end justify-between gap-2">
-                        <div>
-                          <p className="text-2xl font-black text-gray-800">
-                            {shownValue}
+                          <p className="truncate text-xs font-semibold text-gray-700">
+                            {field.label}
                           </p>
-                          <p className="text-[11px] text-gray-400">
-                            {field.unit} / target {field.target}
+                        </div>
+
+                        <p className="text-2xl font-black text-gray-800">
+                          {shownValue}
+                          <span className="ml-1 text-xs font-semibold text-gray-400">
                             {field.unit}
-                          </p>
-                        </div>
-                        <div className="w-24 text-right">
-                          <p className="text-xs font-semibold text-gray-500">
-                            {percent}%
-                          </p>
-                          <div className="progress-bar mt-1 h-2">
-                            <div
-                              className="progress-fill"
-                              style={{
-                                width: `${percent}%`,
-                                backgroundColor: field.color,
-                              }}
-                            />
-                          </div>
-                        </div>
+                          </span>
+                        </p>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2"></div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
